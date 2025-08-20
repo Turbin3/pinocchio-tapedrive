@@ -2065,6 +2065,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pinocchio-token"
+version = "0.4.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#aedc379ba95b1c42c16d18de6be8e7a09cfb25e3"
+dependencies = [
+ "pinocchio 0.9.1 (git+https://github.com/anza-xyz/pinocchio.git)",
+ "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
+]
+
+[[package]]
 name = "pkg-config"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3492,21 +3501,17 @@ dependencies = [
 name = "solana-pinocchio-starter"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "bytemuck",
  "const-crypto",
  "mollusk-svm",
  "mollusk-svm-bencher",
- "num_enum",
  "pinocchio 0.9.1 (git+https://github.com/anza-xyz/pinocchio.git)",
- "pinocchio-associated-token-account",
  "pinocchio-log",
  "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
  "pinocchio-system",
- "pinocchio-token",
+ "pinocchio-token 0.4.0 (git+https://github.com/anza-xyz/pinocchio.git)",
  "shank",
  "solana-sdk",
- "tape-api",
 ]
 
 [[package]]
@@ -4472,7 +4477,7 @@ dependencies = [
  "pinocchio-log",
  "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
  "pinocchio-system",
- "pinocchio-token",
+ "pinocchio-token 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "shank",
 ]
 
