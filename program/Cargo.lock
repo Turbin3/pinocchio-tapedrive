@@ -1947,6 +1947,12 @@ version = "0.8.4"
 source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
 
 [[package]]
+name = "pinocchio"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5123fe61ac87a327d434d530eaddaaf65069a37e33e5c9f798feaed29e4974c8"
+
+[[package]]
 name = "pinocchio-log"
 version = "0.4.0"
 source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
@@ -1970,7 +1976,18 @@ version = "0.2.4"
 source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
 dependencies = [
  "const-crypto",
- "pinocchio",
+ "pinocchio 0.8.4",
+]
+
+[[package]]
+name = "pinocchio-pubkey"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb0225638cadcbebae8932cb7f49cb5da7c15c21beb19f048f05a5ca7d93f065"
+dependencies = [
+ "five8_const",
+ "pinocchio 0.9.0",
+ "sha2-const-stable",
 ]
 
 [[package]]
@@ -1978,8 +1995,18 @@ name = "pinocchio-system"
 version = "0.2.3"
 source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
 dependencies = [
- "pinocchio",
- "pinocchio-pubkey",
+ "pinocchio 0.8.4",
+ "pinocchio-pubkey 0.2.4",
+]
+
+[[package]]
+name = "pinocchio-token"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4eb3a10d04ea7a633c01c4fe68eb650b4606cee4a3977bd1a1259cba324abafb"
+dependencies = [
+ "pinocchio 0.9.0",
+ "pinocchio-pubkey 0.3.0",
 ]
 
 [[package]]
@@ -3417,10 +3444,11 @@ dependencies = [
  "const-crypto",
  "mollusk-svm",
  "mollusk-svm-bencher",
- "pinocchio",
+ "pinocchio 0.9.0",
  "pinocchio-log",
- "pinocchio-pubkey",
+ "pinocchio-pubkey 0.2.4",
  "pinocchio-system",
+ "pinocchio-token",
  "shank",
  "solana-sdk",
 ]
