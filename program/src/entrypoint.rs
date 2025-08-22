@@ -23,9 +23,9 @@ fn process_instruction(
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
 
-    let instruction = TapeInstruction::try_from(discriminator)?;
+    let ix = TapeInstruction::try_from(discriminator)?;
 
-    match instruction {
+    match ix {
         // ProgramInstruction variants
         TapeInstruction::Unknown => return Err(ProgramError::InvalidInstructionData),
         TapeInstruction::Initialize => process_initialize(accounts, data),
