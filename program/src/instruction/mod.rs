@@ -4,11 +4,13 @@ pub mod init;
 pub mod mine;
 pub mod spool;
 pub mod tape;
+pub mod utils;
 
 pub use init::*;
 pub use mine::*;
 pub use spool::*;
 pub use tape::*;
+pub use utils::*;
 
 #[repr(u8)]
 pub enum TapeInstruction {
