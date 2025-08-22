@@ -9,6 +9,7 @@ extern crate std;
 pub mod error;
 pub mod instruction;
 pub mod state;
+pub mod utils;
 
 // Import the API crate
 pub use tape_api as api;
