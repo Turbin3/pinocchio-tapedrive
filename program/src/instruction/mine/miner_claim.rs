@@ -1,4 +1,7 @@
-use crate::state::miner::Miner;
+use crate::{
+    instruction::{load_ix_data, DataLen},
+    state::miner::Miner,
+};
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -7,6 +10,16 @@ use pinocchio::{
     ProgramResult,
 };
 use pinocchio_token::instructions::*;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ClaimIxData {
+    pub amount: u64,
+}
+
+impl DataLen for ClaimIxData {
+    const LEN: usize = core::mem::size_of::<ClaimIxData>();
+}
 
 pub fn process_claim(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     pub const TREASURY: &[u8] = b"treasury";
@@ -25,7 +38,10 @@ pub fn process_claim(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     }
 
     // Fetching the amount from raw data bytes
-    let mut amount = u64::from_le_bytes(data[1..9].try_into().unwrap());
+    let ix_data: &ClaimIxData = unsafe {
+         load_ix_data::<ClaimIxData>(data)? 
+        };
+    let mut amount: u64 = ix_data.amount;
 
     //Deserializing the miner account
     let miner = Miner::from_account_info_unchecked(proof_acc);

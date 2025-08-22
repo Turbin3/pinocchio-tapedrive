@@ -1,5 +1,7 @@
 use pinocchio::{account_info::AccountInfo, pubkey::Pubkey};
 
+use crate::instruction::DataLen;
+
 #[repr(C)]
 pub struct Miner {
     pub authority: Pubkey,
@@ -19,9 +21,10 @@ pub struct Miner {
     pub total_rewards: u64,
 }
 
+impl DataLen for Miner {
+    const LEN: usize = core::mem::size_of::<Miner>();
+}
 impl Miner {
-    pub const LEN: usize = core::mem::size_of::<Miner>();
-
     #[inline]
     pub fn from_account_info_unchecked(account_info: &AccountInfo) -> &mut Self {
         unsafe {
