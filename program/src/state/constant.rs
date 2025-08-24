@@ -29,7 +29,11 @@ pub const METADATA: &[u8] = b"metadata";
 /// Mint PDA seed (raw bytes)
 pub const MINT_SEED: &[u8] = &[152, 68, 212, 200, 25, 113, 221, 71];
 
+pub const MINT_ADDRESS: Pubkey = ed25519::derive_program_address(&[MINT, MINT_SEED], &TAPE_ID).0;
+
 pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, MINT_SEED], &TAPE_ID).1;
+
+pub const TREASURY_ADDRESS: Pubkey = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).0;
 
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).1;
 
