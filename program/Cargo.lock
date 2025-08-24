@@ -1943,21 +1943,21 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pinocchio"
-version = "0.8.4"
-source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
+version = "0.9.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
 
 [[package]]
 name = "pinocchio-log"
-version = "0.4.0"
-source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
+version = "0.5.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
 dependencies = [
  "pinocchio-log-macro",
 ]
 
 [[package]]
 name = "pinocchio-log-macro"
-version = "0.4.1"
-source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
+version = "0.5.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
 dependencies = [
  "quote",
  "regex",
@@ -1966,17 +1966,27 @@ dependencies = [
 
 [[package]]
 name = "pinocchio-pubkey"
-version = "0.2.4"
-source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
+version = "0.3.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
 dependencies = [
- "const-crypto",
+ "five8_const",
  "pinocchio",
+ "sha2-const-stable",
 ]
 
 [[package]]
 name = "pinocchio-system"
-version = "0.2.3"
-source = "git+https://github.com/anza-xyz/pinocchio.git#f92c33690b159874bc4aea1a439c651e2b9b5537"
+version = "0.3.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
+dependencies = [
+ "pinocchio",
+ "pinocchio-pubkey",
+]
+
+[[package]]
+name = "pinocchio-token"
+version = "0.4.0"
+source = "git+https://github.com/anza-xyz/pinocchio.git#4f47ad2a05cbe7e3d4596d4c98f9dc66d02abd94"
 dependencies = [
  "pinocchio",
  "pinocchio-pubkey",
@@ -3421,6 +3431,7 @@ dependencies = [
  "pinocchio-log",
  "pinocchio-pubkey",
  "pinocchio-system",
+ "pinocchio-token",
  "shank",
  "solana-sdk",
 ]
