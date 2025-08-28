@@ -32,3 +32,44 @@ pub const MINT_SEED: &[u8] = &[152, 68, 212, 200, 25, 113, 221, 71];
 pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, MINT_SEED], &TAPE_ID).1;
 
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).1;
+
+/// Maximum length for names
+pub const NAME_LEN:   usize = 32;
+/// Header size in bytes
+pub const HEADER_SIZE: usize = 64;
+/// Rent charged per segment per block
+pub const RENT_PER_SEGMENT: u64 = 100; 
+
+/// Duration of one block in seconds (~1 minute)
+pub const BLOCK_DURATION_SECONDS: u64 = 60;
+/// Number of blocks per epoch (~10 minutes)
+pub const EPOCH_BLOCKS: u64 = 10;
+/// Adjustment interval (in epochs)
+pub const ADJUSTMENT_INTERVAL: u64 = 50;
+/// Number of blocks per year
+pub const BLOCKS_PER_YEAR: u64 = 60 * 60 * 24 * 365 / BLOCK_DURATION_SECONDS;
+
+// ====================================================================
+// Merkle Tree Configuration
+// ====================================================================
+/// Height of the Merkle tree containing segments (number of levels)
+pub const SEGMENT_TREE_HEIGHT: usize = 18;
+/// Number of hashes in a Merkle proof for a segment tree
+pub const SEGMENT_PROOF_LEN: usize = SEGMENT_TREE_HEIGHT;
+
+/// Maximum reward scaling factor for miners
+pub const MAX_CONSISTENCY_MULTIPLIER: u64  = 32;
+/// Minimum reward scaling factor for miners
+pub const MIN_CONSISTENCY_MULTIPLIER: u64  = 1;
+
+/// Minimum mining difficulty
+pub const MIN_MINING_DIFFICULTY: u64       = 1;
+/// Minimum block participation required to solve a block
+pub const MIN_PARTICIPATION_TARGET: u64    = 1;
+/// Maximum block participation required to solve a block
+pub const MAX_PARTICIPATION_TARGET: u64    = 100;
+
+/// Segment size in bytes
+pub const SEGMENT_SIZE: usize = 128;
+/// Empty segment of SEGMENT_SIZE bytes for tapes that don't have minimum rent
+pub const EMPTY_SEGMENT: [u8; SEGMENT_SIZE] = [0; SEGMENT_SIZE];

@@ -14,6 +14,9 @@ pinocchio-system = { git = "https://github.com/anza-xyz/pinocchio.git" }
 const-crypto = "0.3.0"
 shank = "0.4.2"
 bytemuck = { version = "1.23.0", features = ["derive"] }
+packx = "0.3.1"
+crankx = "0.2.2"
+brine-tree = "0.6.2"
 
 [dev-dependencies]
 solana-sdk = "2.2.1"
