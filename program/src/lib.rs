@@ -9,5 +9,6 @@ extern crate std;
 pub mod error;
 pub mod instruction;
 pub mod state;
+pub mod api;
 
 pinocchio_pubkey::declare_id!("ENrRns55VechXJiq4bMbdx7idzQh7tvaEJoYeWxRNe7Y");
