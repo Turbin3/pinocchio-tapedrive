@@ -101,31 +101,3 @@ pub fn miner_pda(authority: Pubkey, name: [u8; 32]) -> (Pubkey, u8) {
         name.as_ref()], 
         &crate::id())
 }
-
-#[inline(always)]
-pub fn compute_next_challenge(
-    current_challenge: &[u8; 32],
-    slot_hashes_info: &AccountInfo,
-) -> [u8; 32] {
-    let mut result = [0u8; 32];
-    
-    // get slot hash data - simplified approach
-    let slot_hash = if let Ok(slot_data) = slot_hashes_info.try_borrow_data() {
-        if slot_data.len() >= 32 {
-            let mut hash = [0u8; 32];
-            hash.copy_from_slice(&slot_data[0..32]);
-            hash
-        } else {
-            [0u8; 32]
-        }
-    } else {
-        [0u8; 32]
-    };
-    
-    // simple XOR-based mixing of current challenge with slot hash
-    for i in 0..32 {
-        result[i] = current_challenge[i] ^ slot_hash[i];
-    }
-    
-    result
-}

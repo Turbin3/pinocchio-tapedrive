@@ -1,5 +1,5 @@
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, sysvars::{clock::Clock, Sysvar}, ProgramResult};
-use crate::{error::TapeError, state::{compute_next_challenge, miner_pda, try_from_account_info_mut, Archive, Block, Epoch, Mine, Miner, PoA, PoW, Tape, ADJUSTMENT_INTERVAL, BLOCK_DURATION_SECONDS, EMPTY_SEGMENT, EPOCH_BLOCKS, MAX_CONSISTENCY_MULTIPLIER, MAX_PARTICIPATION_TARGET, MIN_CONSISTENCY_MULTIPLIER, MIN_MINING_DIFFICULTY, MIN_PARTICIPATION_TARGET, SEGMENT_PROOF_LEN}};
+use crate::{api::utils::{compute_challenge, compute_next_challenge}, error::TapeError, state::{miner_pda, try_from_account_info_mut, Archive, Block, Epoch, Mine, Miner, PoA, PoW, Tape, ADJUSTMENT_INTERVAL, BLOCK_DURATION_SECONDS, EMPTY_SEGMENT, EPOCH_BLOCKS, MAX_CONSISTENCY_MULTIPLIER, MAX_PARTICIPATION_TARGET, MIN_CONSISTENCY_MULTIPLIER, MIN_MINING_DIFFICULTY, MIN_PARTICIPATION_TARGET, SEGMENT_PROOF_LEN}};
 use brine_tree::{Leaf, verify};
 
 const EPOCHS_PER_YEAR: u64 = 365 * 24 * 60 / EPOCH_BLOCKS;
@@ -89,7 +89,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Update miner
     update_multiplier(miner, block);
 
-    let next_challenge = compute_next_challenge(&block.challenge, slot_hashes_info);
+    let next_challenge = compute_next_challenge(&block.challenge, slot_hashes_info)?;
 
     let reward = calculate_reward(epoch, tape, miner.multiplier);
 
@@ -102,7 +102,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     if block.progress >= epoch.target_participation{
         advance_block(block, current_time)?;
 
-        let next_block_challenges = compute_next_challenge(&block.challenge, slot_hashes_info);
+        let next_block_challenges = compute_next_challenge(&block.challenge, slot_hashes_info)?;
 
         block.challenge = next_block_challenges;
         block.challenge_set =archive.tapes_stored;
@@ -121,18 +121,6 @@ fn advance_block(block: &mut Block, current_time: i64) -> ProgramResult {
     block.last_block_at = current_time;
     block.number = block.number.saturating_add(1);
     Ok(())
-}
-
-#[inline(always)]
-pub fn compute_challenge(
-    block_challenge: &[u8; 32],
-    miner_challenge: &[u8; 32],
-) -> [u8; 32] {
-    let mut result = [0u8; 32];
-    for i in 0..32 {
-        result[i] = block_challenge[i] ^ miner_challenge[i];
-    }
-    result
 }
 
 /// Helper: compute the recall tape number from a given challenge

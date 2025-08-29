@@ -1,5 +1,5 @@
 [package]
-name = "solana-pinocchio-starter"
+name = "solana-pinocchio-tapedrive"
 version = "0.1.0"
 edition = "2021"
 
@@ -20,6 +20,7 @@ bytemuck = { version = "1.23.0", features = ["derive"] }
 packx = "0.3.1"
 crankx = "0.2.2"
 brine-tree = "0.6.2"
+steel = "4.0.2"
 
 [dev-dependencies]
 solana-sdk = "2.2.1"
