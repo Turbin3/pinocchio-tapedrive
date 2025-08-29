@@ -1,5 +1,5 @@
 [package]
-name = "solana-pinocchio-starter"
+name = "solana-pinocchio-tapedrive"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,10 +17,10 @@ num_enum = "0.7.2"
 const-crypto = "0.3.0"
 shank = "0.4.2"
 bytemuck = { version = "1.23.0", features = ["derive"] }
-steel = "4.0.2"
-brine-tree = "0.6.2"
+packx = "0.3.1"
 crankx = "0.2.2"
-packx = "0.2.5"
+brine-tree = "0.6.2"
+steel = "4.0.2"
 
 [dev-dependencies]
 solana-sdk = "2.2.1"

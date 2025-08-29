@@ -3,7 +3,7 @@
 #[cfg(not(feature = "no-entrypoint"))]
 mod entrypoint;
 
-#[cfg(feature = "std")]
+// #[cfg(feature = "std")]
 extern crate std;
 
 pub mod error;

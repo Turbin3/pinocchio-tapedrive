@@ -1,6 +1,6 @@
-use pinocchio::{account_info::AccountInfo, program_error::ProgramError};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, pubkey::{find_program_address, Pubkey}};
 
-use crate::error::MyProgramError;
+use crate::{error::MyProgramError, state::MINER};
 
 pub trait DataLen {
     const LEN: usize;
@@ -92,4 +92,12 @@ pub unsafe fn try_from_account_info_mut<T: DataLen>(
     }
 
     Ok(&mut *(bytes.as_mut_ptr() as *mut T))
+}
+
+pub fn miner_pda(authority: Pubkey, name: [u8; 32]) -> (Pubkey, u8) {
+    find_program_address(
+        &[MINER, 
+        authority.as_ref(), 
+        name.as_ref()], 
+        &crate::id())
 }
