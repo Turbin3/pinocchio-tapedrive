@@ -6,6 +6,14 @@ use pinocchio::pubkey::Pubkey;
 // mpl_token_metadata
 // metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
 
+// ====================================================================
+// Miscellaneous
+// ====================================================================
+/// Maximum length for names
+pub const NAME_LEN:   usize = 32;
+/// Header size in bytes
+pub const HEADER_SIZE: usize = 64;
+
 pub const TAPE_ID: Pubkey = [
     13, 54, 220, 252, 136, 247, 73, 20, 47, 6, 78, 137, 18, 160, 48, 203, 213, 61, 221, 159, 81,
     168, 160, 144, 213, 135, 83, 108, 248, 37, 140, 51,
