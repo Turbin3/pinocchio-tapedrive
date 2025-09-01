@@ -5,7 +5,7 @@ use pinocchio::{
     ProgramResult,
 };
 use crate::state::pda::{mint_pda};
-use crate::state::constant::{TREASURY_BUMP};
+use crate::state::constant::{TREASURY_ADDRESS, TREASURY_BUMP};
 use pinocchio_token::instructions::MintTo;
 use bytemuck::try_from_bytes;
 use bytemuck::{Pod, Zeroable};
@@ -37,8 +37,20 @@ pub fn process_airdrop(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     let (mint_address, _mint_bump) = mint_pda();
 
+    if !mint_info.is_writable(){
+        return Err(ProgramError::Immutable);
+    }
+
     if mint_info.key() != &mint_address {
         return Err(ProgramError::InvalidAccountData)
+    }
+
+    if treasury_info.key() != &TREASURY_ADDRESS {
+        return Err(ProgramError::InvalidAccountData)
+    }
+
+    if !beneficiary_info.is_writable() {
+        return Err(ProgramError::Immutable);
     }
 
     let ix_data = try_from_bytes::<AirdropIx>(data).map_err(|_| ProgramError::InvalidInstructionData)?;
