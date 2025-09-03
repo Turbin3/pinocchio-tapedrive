@@ -6,6 +6,7 @@ pub mod error;
 // pub mod instruction;
 pub mod loaders;
 // pub mod pda;
+pub mod metadata;
 pub mod rent;
 pub mod state;
 pub mod types;
