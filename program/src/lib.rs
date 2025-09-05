@@ -9,6 +9,8 @@ extern crate std;
 pub mod error;
 pub mod instruction;
 pub mod state;
-pub mod api;
+
+// Import the API crate
+pub use tape_api as api;
 
 pinocchio_pubkey::declare_id!("ENrRns55VechXJiq4bMbdx7idzQh7tvaEJoYeWxRNe7Y");

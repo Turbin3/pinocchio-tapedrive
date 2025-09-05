@@ -3,8 +3,8 @@ use pinocchio::{
     instruction::{Seed, Signer},
     program_error::ProgramError,
     pubkey::{self, Pubkey},
-    ProgramResult,
     sysvars::rent::Rent,
+    ProgramResult,
 };
 
 use pinocchio_system::instructions::CreateAccount;
@@ -12,6 +12,7 @@ use pinocchio_system::instructions::CreateAccount;
 use crate::state::utils::try_from_account_info_mut;
 
 use crate::api::prelude::*;
+use crate::api::state::utils::DataLen as ApiDataLen;
 
 use crate::api::utils::compute_next_challenge;
 
@@ -20,7 +21,7 @@ use crate::state::utils::{load_ix_data, DataLen};
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
 pub struct RegisterMinerIxData {
-    pub name: [u8; 32],   
+    pub name: [u8; 32],
 }
 
 impl DataLen for RegisterMinerIxData {
@@ -28,14 +29,9 @@ impl DataLen for RegisterMinerIxData {
 }
 
 pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [
-        signer_info,
-        miner_info,         
-        rent_info,
-        slot_hashes_info,
-        _system_program_info,
-        _remaining @ ..,
-    ] = accounts else {
+    let [signer_info, miner_info, rent_info, slot_hashes_info, _system_program_info, _remaining @ ..] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -53,7 +49,7 @@ pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult 
 
     let seeds = &[b"miner_account", &ix_data.name[..]];
     let (miner_pda, miner_bump) = pubkey::find_program_address(seeds, &crate::ID);
-    
+
     if miner_pda.ne(miner_info.key()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -71,22 +67,19 @@ pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult 
     CreateAccount {
         from: signer_info,
         to: miner_info,
-        space: Miner::LEN as u64,
+        space: <Miner as ApiDataLen>::LEN as u64,
         owner: &crate::ID,
-        lamports: rent.minimum_balance(Miner::LEN),
+        lamports: rent.minimum_balance(<Miner as ApiDataLen>::LEN),
     }
     .invoke_signed(&signers)?;
 
-    let next_challenge = compute_next_challenge(
-        &miner_info.key(),
-        &slot_hashes_info,
-    )?;
+    let next_challenge = compute_next_challenge(&miner_info.key(), &slot_hashes_info)?;
 
     Miner::initialize(
         miner_info,
         ix_data.name,
         (*signer_info.key()).into(),
-        next_challenge
+        next_challenge,
     )?;
 
     Ok(())
