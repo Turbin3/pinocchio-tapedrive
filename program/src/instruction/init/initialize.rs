@@ -1,85 +1,13 @@
 use crate::state::*;
-use pinocchio::{
-    account_info::AccountInfo,
-    program_error::ProgramError,
-    pubkey::{find_program_address, Pubkey},
-    ProgramResult,
-};
+use crate::utils::account_traits::AccountInfoExt;
+use crate::utils::get_pda::GetPda;
+use crate::utils::helpers::{create_program_account, SeedType};
+use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 
-trait AccountInfoExt {
-    fn check_account(&self, seed: &[u8]) -> ProgramResult;
-    fn check_account_with_address(&self, address: &Pubkey) -> ProgramResult;
-    fn is_program_check(&self) -> ProgramResult;
-}
-
-impl AccountInfoExt for AccountInfo {
-    fn check_account(&self, seed: &[u8]) -> ProgramResult {
-        if !self.data_is_empty() {
-            return Err(ProgramError::AccountAlreadyInitialized);
-        }
-        if !self.is_writable() {
-            return Err(ProgramError::Immutable);
-        }
-        let (pda, _bump) = find_program_address(&[seed], &TAPE_ID);
-
-        if self.key() != &pda {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        Ok(())
-    }
-
-    fn check_account_with_address(&self, address: &Pubkey) -> ProgramResult {
-        if !self.data_is_empty() {
-            return Err(ProgramError::AccountAlreadyInitialized);
-        }
-        if !self.is_writable() {
-            return Err(ProgramError::Immutable);
-        }
-
-        if self.key().ne(address) {
-            return Err(ProgramError::InvalidAccountData);
-        }
-        Ok(())
-    }
-
-    fn is_program_check(&self) -> ProgramResult {
-        if self.key().ne(&TAPE_ID) {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        if !self.executable() {
-            return Err(ProgramError::InvalidAccountData);
-        }
-
-        Ok(())
-    }
-}
-
-enum GetPda {
-    Metadata(Pubkey),
-    Mint,
-    Treasury,
-}
-
-impl GetPda {
-    pub fn address(&self) -> (Pubkey, u8) {
-        match self {
-            GetPda::Mint => {
-                find_program_address(&[b"mint", &[152, 68, 212, 200, 25, 113, 221, 71]], &TAPE_ID)
-            }
-            GetPda::Treasury => find_program_address(&[b"treasury"], &TAPE_ID),
-            GetPda::Metadata(mint) => find_program_address(
-                &[b"metadata", MPL_TOKEN_METADATA_ID.as_ref(), mint.as_ref()],
-                &MPL_TOKEN_METADATA_ID,
-            ),
-        }
-    }
-}
-
-pub fn process_initialize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    if !data.is_empty() {
-        return Err(ProgramError::InvalidInstructionData);
-    }
+pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResult {
+    // if !data.is_empty() {
+    //     return Err(ProgramError::InvalidInstructionData);
+    // }
 
     let [signer_info, archive_info, epoch_info, block_info, metadata_info, mint_info, treasury_info, treasury_ata_info, tape_info, writer_info, tape_program_info, system_program_info, token_program_info, associated_token_program_info, metadata_program_info, rent_sysvar_info, slot_hashes_info] =
         accounts
@@ -117,5 +45,12 @@ pub fn process_initialize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
     rent_sysvar_info.is_program_check()?;
     slot_hashes_info.is_program_check()?;
 
+    create_program_account::<Epoch>(
+        archive_info,
+        system_program_info,
+        signer_info,
+        &TAPE_ID,
+        SeedType::Archive,
+    )?;
     Ok(())
 }
