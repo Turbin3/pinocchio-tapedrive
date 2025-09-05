@@ -10,7 +10,7 @@ use pinocchio::pubkey::Pubkey;
 // Miscellaneous
 // ====================================================================
 /// Maximum length for names
-pub const NAME_LEN:   usize = 32;
+pub const NAME_LEN: usize = 32;
 /// Header size in bytes
 pub const HEADER_SIZE: usize = 64;
 
@@ -44,9 +44,3 @@ pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, MINT_SEED], &T
 pub const TREASURY_ADDRESS: Pubkey = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).0;
 
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).1;
-
-/// Maximum length for names
-pub const NAME_LEN: usize = 32;
-
-/// Header size in bytes
-pub const HEADER_SIZE: usize = 64;

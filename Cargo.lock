@@ -1989,17 +1989,21 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "pinnochio-tape-program"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "bytemuck",
  "const-crypto",
  "mollusk-svm",
  "mollusk-svm-bencher",
+ "num_enum",
  "pinocchio 0.9.1 (git+https://github.com/anza-xyz/pinocchio.git)",
+ "pinocchio-associated-token-account",
  "pinocchio-log",
  "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
  "pinocchio-system",
- "pinocchio-token 0.4.0 (git+https://github.com/anza-xyz/pinocchio.git)",
+ "pinocchio-token",
  "shank",
  "solana-sdk",
+ "tape-api",
 ]
 
 [[package]]
@@ -2079,15 +2083,6 @@ checksum = "4eb3a10d04ea7a633c01c4fe68eb650b4606cee4a3977bd1a1259cba324abafb"
 dependencies = [
  "pinocchio 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pinocchio-pubkey 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "pinocchio-token"
-version = "0.4.0"
-source = "git+https://github.com/anza-xyz/pinocchio.git#aedc379ba95b1c42c16d18de6be8e7a09cfb25e3"
-dependencies = [
- "pinocchio 0.9.1 (git+https://github.com/anza-xyz/pinocchio.git)",
- "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
 ]
 
 [[package]]
@@ -4477,7 +4472,7 @@ dependencies = [
  "pinocchio-log",
  "pinocchio-pubkey 0.3.0 (git+https://github.com/anza-xyz/pinocchio.git)",
  "pinocchio-system",
- "pinocchio-token 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pinocchio-token",
  "shank",
 ]
 

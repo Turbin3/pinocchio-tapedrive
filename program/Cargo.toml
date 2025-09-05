@@ -7,20 +7,26 @@ edition.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pinocchio = { git = "https://github.com/anza-xyz/pinocchio.git" }
-pinocchio-log = { git = "https://github.com/anza-xyz/pinocchio.git" }
-pinocchio-pubkey = { git = "https://github.com/anza-xyz/pinocchio.git" }
-pinocchio-system = { git = "https://github.com/anza-xyz/pinocchio.git" }
-pinocchio-token = { git = "https://github.com/anza-xyz/pinocchio.git" }
-const-crypto = "0.3.0"
-shank = "0.4.2"
-bytemuck = { version = "1.23.0", features = ["derive"] }
+# Local dependencies
+tape-api = { path = "../api" }
+
+# Workspace dependencies
+pinocchio.workspace = true
+pinocchio-log.workspace = true
+pinocchio-pubkey.workspace = true
+pinocchio-system.workspace = true
+pinocchio-token.workspace = true
+pinocchio-associated-token-account.workspace = true
+num_enum.workspace = true
+const-crypto.workspace = true
+shank.workspace = true
+bytemuck.workspace = true
+blake3.workspace = true
 
 [dev-dependencies]
-solana-sdk = "2.2.1"
-mollusk-svm = "0.4.0"
-mollusk-svm-bencher = "0.4.0"
-
+solana-sdk.workspace = true
+mollusk-svm.workspace = true
+mollusk-svm-bencher.workspace = true
 
 [features]
 no-entrypoint = []
@@ -31,7 +37,6 @@ bench-default = ["no-entrypoint", "std"]
 [[bench]]
 name = "compute_units"
 harness = false
-
 
 [[test]]
 name = "unit_tests"
