@@ -21,9 +21,6 @@ num_enum.workspace = true
 const-crypto.workspace = true
 shank.workspace = true
 bytemuck.workspace = true
-brine-tree.workspace = true
-crankx.workspace = true
-packx.workspace = true
 blake3.workspace = true
 
 [dev-dependencies]
