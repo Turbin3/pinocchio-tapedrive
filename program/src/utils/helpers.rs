@@ -1,5 +1,8 @@
+use crate::state::*;
+use crate::utils::AccountDiscriminator;
 use bytemuck::Pod;
 use pinocchio::sysvars::rent::Rent;
+use pinocchio::sysvars::Sysvar;
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -8,43 +11,62 @@ use pinocchio::{
 };
 use pinocchio_system::instructions::CreateAccount;
 
-pub trait Discriminator {
-    fn discriminator() -> u8;
+pub enum SeedType {
+    Archive,
+    Epoch,
+    Block,
+    Treasury,
 }
 
-struct helpers {}
-
-impl helpers {
-    pub fn create_program_account<'a, T: Discriminator + Pod>(
-        target_account: &'a AccountInfo,
-        system_program: &'a AccountInfo,
-        payer: &'a AccountInfo,
-        owner: &Pubkey,
-        seeds: &[&[u8]],
-    ) -> ProgramResult {
-        let bump = find_program_address(seeds, owner).1;
-        let space = 8 + core::mem::size_of::<T>();
-        // let total_seeds = [Seed, seeds.len() + 1];
-
-        for seed in seeds {}
-
-        let seeds = [Seed::from(b"seed")];
-        let signers: &[Signer] = &[Signer::from(&seeds)];
-
-        CreateAccount {
-            from: payer,
-            to: target_account,
-            lamports: 100,
-            space: space as u64,
-            owner: owner,
+impl SeedType {
+    fn get_seeds(&self) -> &'static [&'static [u8]] {
+        match self {
+            SeedType::Archive => &[ARCHIVE],
+            SeedType::Epoch => &[EPOCH],
+            SeedType::Block => &[BLOCK],
+            SeedType::Treasury => &[TREASURY],
         }
-        .invoke_signed(signers);
-
-        // let mut data = target_account.try_borrow_mut_data()?;
-        // data[0] = T::discriminator();
-
-        // let signer = [Signer::from(&seeds)];
-
-        Ok(())
     }
+}
+
+pub fn create_program_account<T: AccountDiscriminator + Pod>(
+    target_account: &AccountInfo,
+    system_program: &AccountInfo,
+    payer: &AccountInfo,
+    owner: &Pubkey,
+    seed_type: SeedType,
+) -> ProgramResult {
+    let seeds = seed_type.get_seeds();
+    let (expected_address, bump) = find_program_address(seeds, owner);
+
+    // Verify the target account has the expected address
+    if target_account.key() != &expected_address {
+        return Err(pinocchio::program_error::ProgramError::InvalidAccountData);
+    }
+
+    let space = 8 + core::mem::size_of::<T>();
+    let rent = Rent::get()?;
+    let lamports = rent.minimum_balance(space);
+
+    // Create the seed array for signing - we need to include the bump
+    let bump_slice = [bump];
+    let base_seed = seed_type.get_seeds()[0];
+    let seeds_array = [Seed::from(base_seed), Seed::from(bump_slice.as_slice())];
+
+    let signers: &[Signer] = &[Signer::from(&seeds_array)];
+
+    CreateAccount {
+        from: payer,
+        to: target_account,
+        lamports,
+        space: space as u64,
+        owner: owner,
+    }
+    .invoke_signed(signers)?;
+
+    // Set the discriminator
+    let mut data = target_account.try_borrow_mut_data()?;
+    data[0] = T::discriminator();
+
+    Ok(())
 }
