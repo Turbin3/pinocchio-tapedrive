@@ -1,7 +1,7 @@
 [package]
-name = "solana-pinocchio-starter"
-version = "0.1.0"
-edition = "2021"
+name = "pinnochio-tape-program"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
