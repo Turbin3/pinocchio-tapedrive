@@ -1,0 +1,49 @@
+[workspace]
+members = [
+    "program",
+    "api",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+homepage = "https://github.com/Turbin3/pinocchio-tapedrive"
+repository = "https://github.com/Turbin3/pinocchio-tapedrive"
+keywords = ["solana", "blockchain", "tape"]
+readme = "README.md"
+description = "Tape Pinocchio program"
+
+[workspace.dependencies]
+# Pinocchio dependencies
+pinocchio = { git = "https://github.com/anza-xyz/pinocchio.git" }
+pinocchio-log = { git = "https://github.com/anza-xyz/pinocchio.git" }
+pinocchio-pubkey = { git = "https://github.com/anza-xyz/pinocchio.git" }
+pinocchio-system = { git = "https://github.com/anza-xyz/pinocchio.git" }
+pinocchio-token = "0.4.0"
+pinocchio-associated-token-account = "0.2.0"
+
+# Common dependencies
+num_enum = "0.7.2"
+const-crypto = "0.3.0"
+shank = "0.4.2"
+bytemuck = { version = "1.23.0", features = ["derive"] }
+# brine-tree = "0.6.2"
+# crankx = "0.2.2"
+# packx = "0.2.5"
+blake3 = "1.8.2"
+
+# Solana dependencies - use compatible versions
+# solana-program = "2.2.1"
+solana-sdk = "2.2.1"
+# spl-token = "4.0.2"
+# spl-associated-token-account = "2.3.0"
+# mpl-token-metadata = "3.2.1"
+
+# Development dependencies
+mollusk-svm = "0.4.0"
+mollusk-svm-bencher = "0.4.0"
+
+# Utility dependencies
+array-const-fn-init = "0.1.0" 

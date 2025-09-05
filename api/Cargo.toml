@@ -1,0 +1,33 @@
+[package]
+name = "tape-api"
+description.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+readme.workspace = true
+
+documentation = "https://docs.rs/tape-api"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+# Workspace dependencies
+bytemuck.workspace = true
+num_enum.workspace = true
+const-crypto.workspace = true
+
+
+pinocchio.workspace = true
+pinocchio-log.workspace = true
+pinocchio-pubkey.workspace = true
+pinocchio-system.workspace = true
+pinocchio-token.workspace = true
+pinocchio-associated-token-account.workspace = true
+
+
+shank.workspace = true
+blake3.workspace = true

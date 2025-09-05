@@ -1,0 +1,51 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Cargo lock file (for libraries, you might want to ignore this)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Solana build artifacts
+test-ledger/
+.anchor/
+
+# Node modules (if you have any JS/TS tooling)
+node_modules/
+
+# Temporary files
+tmp/
+temp/ 
