@@ -34,8 +34,7 @@ pub struct CreateMetadataAccountV3 {
     /// System program
     pub system_program: Pubkey,
     /// Rent info
-    pub rent_present: u8,
-    pub rent: Pubkey,
+    pub rent: Option<Pubkey>,
 }
 
 pub struct InstructionOwned {
@@ -72,8 +71,8 @@ impl CreateMetadataAccountV3 {
             metas.get_unchecked_mut(3).write(AccountMeta::new(&self.payer, true, true));
             metas.get_unchecked_mut(4).write(AccountMeta::new(&self.update_authority.0, true, self.update_authority.1));
             metas.get_unchecked_mut(5).write(AccountMeta::readonly(&self.system_program));
-            if self.rent_present == 1 {
-                metas.get_unchecked_mut(6).write(AccountMeta::readonly(&self.rent));
+            if let Some(rent) = &self.rent {
+                metas.get_unchecked_mut(6).write(AccountMeta::readonly(rent));
             } else {                
                 metas.get_unchecked_mut(6).write(AccountMeta::readonly(&default_pubkey));
             }
@@ -141,24 +140,16 @@ pub struct CreateMetadataAccountV3InstructionArgs {
 
 #[derive(Debug)]
 pub struct CreateMetadataAccountV3Builder<'b> {
-    metadata_present: u8,
-    metadata: Pubkey,
-    mint_present: u8,
-    mint: Pubkey,
-    mint_authority: Pubkey,
-    payer_present: u8,
-    payer: Pubkey,
-    update_authority_present: u8,
-    update_authority: (Pubkey, bool),
-    system_program: Pubkey,
-    rent_present: u8,
-    rent: Pubkey,
-    data_present: u8,
-    data: DataV2,
-    is_mutable_present: u8,
-    is_mutable: u8,
-    collection_details_present: u8,
-    collection_details: CollectionDetails,
+    metadata: Option<Pubkey>,
+    mint: Option<Pubkey>,
+    mint_authority: Option<Pubkey>,
+    payer: Option<Pubkey>,
+    update_authority: Option<(Pubkey, bool)>,
+    system_program: Option<Pubkey>,
+    rent: Option<Pubkey>,
+    data: Option<DataV2>,
+    is_mutable: Option<bool>,
+    collection_details: Option<CollectionDetails>,
     __remaining_accounts: [MaybeUninit<AccountMeta<'b>>; MAX_CPI_ACCOUNTS],
     __remaining_accounts_len: u16,
 }
@@ -166,24 +157,16 @@ pub struct CreateMetadataAccountV3Builder<'b> {
 impl<'b> CreateMetadataAccountV3Builder<'b> {
     pub fn new() -> Self {
         Self {
-            metadata_present: 0,
-            metadata: Pubkey::default(),
-            mint_present: 0,
-            mint: Pubkey::default(),
-            mint_authority: Pubkey::default(),
-            payer_present: 0,
-            payer: Pubkey::default(),
-            update_authority_present: 0,
-            update_authority: (Pubkey::default(), false),
-            system_program: Pubkey::default(),
-            rent_present: 0,
-            rent: Pubkey::default(),
-            data_present: 0,
-            data: DataV2::default(),
-            is_mutable_present: 0,
-            is_mutable: 0,
-            collection_details_present: 0,
-            collection_details: CollectionDetails::default(),
+            metadata: None,
+            mint: None,
+            mint_authority: None,
+            payer: None,
+            update_authority: None,
+            system_program: None,
+            rent: None,
+            data: None,
+            is_mutable: None,
+            collection_details: None,
             __remaining_accounts: unsafe { MaybeUninit::uninit().assume_init() },
             __remaining_accounts_len: 0,
         }
@@ -191,29 +174,25 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
     /// Metadata key (pda of ['metadata', program id, mint id])
     #[inline(always)]
     pub fn metadata(&mut self, metadata: Pubkey) -> &mut Self {
-        self.metadata_present = 1;
-        self.metadata = metadata;
+        self.metadata = Some(metadata);
         self
     }
     /// Mint of token asset
     #[inline(always)]
     pub fn mint(&mut self, mint: Pubkey) -> &mut Self {
-        self.mint_present = 1;
-        self.mint = mint;
+        self.mint = Some(mint);
         self
     }
     /// Mint authority
     #[inline(always)]
     pub fn mint_authority(&mut self, mint_authority: Pubkey) -> &mut Self {
-        self.mint_present = 1;
-        self.mint_authority = mint_authority;
+        self.mint_authority = Some(mint_authority);
         self
     }
     /// payer
     #[inline(always)]
     pub fn payer(&mut self, payer: Pubkey) -> &mut Self {
-        self.payer_present = 1;
-        self.payer = payer;
+        self.payer = Some(payer);
         self
     }
     /// update authority info
@@ -223,8 +202,7 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
         update_authority: Pubkey,
         as_signer: bool,
     ) -> &mut Self {
-        self.update_authority_present = 1;
-        self.update_authority = (update_authority, as_signer);
+        self.update_authority = Some((update_authority, as_signer));
         self
     }
 //     /// `[optional account, default to '11111111111111111111111111111111']`
@@ -237,27 +215,23 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
     /// `[optional account]`
     /// Rent info
     #[inline(always)]
-    pub fn rent(&mut self, rent: Pubkey) -> &mut Self {
-        self.rent_present = 1;
+    pub fn rent(&mut self, rent: Option<Pubkey>) -> &mut Self {
         self.rent = rent;
         self
     }
     #[inline(always)]
     pub fn data(&mut self, data: DataV2) -> &mut Self {
-        self.data_present = 1;
-        self.data = data;
+        self.data = Some(data);
         self
     }
     #[inline(always)]
-    pub fn is_mutable(&mut self, is_mutable: u8) -> &mut Self {
-        self.is_mutable_present = 1;
-        self.is_mutable = is_mutable;
+    pub fn is_mutable(&mut self, is_mutable: bool) -> &mut Self {
+        self.is_mutable = Some(is_mutable);
         self
     }
     /// `[optional argument]`
     #[inline(always)]
-    pub fn collection_details(&mut self, collection_details: CollectionDetails) -> &mut Self {
-        self.collection_details_present = 1;
+    pub fn collection_details(&mut self, collection_details: Option<CollectionDetails>) -> &mut Self {
         self.collection_details = collection_details;
         self
     }
@@ -287,26 +261,33 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
         }
         self
     }
+
+    fn build_accounts(&self) -> Result<CreateMetadataAccountV3, ProgramError> {
+        Ok(CreateMetadataAccountV3 {
+            metadata: self.metadata.ok_or(ProgramError::InvalidArgument)?,
+            mint: self.mint.ok_or(ProgramError::InvalidArgument)?,
+            mint_authority: self.mint_authority.ok_or(ProgramError::InvalidArgument)?,
+            payer: self.payer.ok_or(ProgramError::InvalidArgument)?,
+            update_authority: self.update_authority.ok_or(ProgramError::InvalidArgument)?,
+            system_program: self.system_program.unwrap_or(Pubkey::from([1u8; 32])), // Default system program
+            rent: self.rent,
+        })
+    }
+
+    fn build_args(&self) -> Result<CreateMetadataAccountV3InstructionArgs, ProgramError> {
+        Ok(CreateMetadataAccountV3InstructionArgs {
+            data: self.data.ok_or(ProgramError::InvalidArgument)?,
+            is_mutable: if self.is_mutable.ok_or(ProgramError::InvalidArgument)? { 1 } else { 0 },
+            collection_details: self.collection_details.unwrap_or(CollectionDetails::default()),
+            collection_details_present: if self.collection_details.is_some() { 1 } else { 0 },
+            _padding: [0; 6],
+        })
+    }
+
     // #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> Result<Instruction, ProgramError> {
-        let accounts = CreateMetadataAccountV3 {
-            metadata: self.metadata,
-            mint: self.mint,
-            mint_authority: self.mint_authority,
-            payer: self.payer,
-            update_authority: self.update_authority,
-            system_program: self.system_program,
-            rent_present: self.rent_present,
-            rent: self.rent,
-        };
-        let args = CreateMetadataAccountV3InstructionArgs {
-            data: self.data,
-            is_mutable: self.is_mutable,
-            collection_details: self.collection_details,
-            collection_details_present: self.collection_details_present,
-            _padding: [0u8; 6],
-        };
-
+        let accounts = self.build_accounts()?;
+        let args = self.build_args()?;
         let instruction = accounts.instruction_with_remaining_accounts(args, &[])?;
 
         let metas_slice: &[AccountMeta] = unsafe {
@@ -586,7 +567,6 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
         &mut self,
         mint_authority: &'b AccountInfo,
     ) -> &mut Self {
-        self.instruction.mint_present = 1;
         self.instruction.mint_authority = mint_authority;
         self
     }
@@ -696,10 +676,7 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
 
         let args = CreateMetadataAccountV3InstructionArgs {
             data: self.instruction.data.clone(),
-            is_mutable: self
-                .instruction
-                .is_mutable
-                .clone(),
+            is_mutable: self.instruction.is_mutable.clone(),
             collection_details: self.instruction.collection_details.clone(),
             _padding: [0u8; 6],
             collection_details_present: self.instruction.collection_details_present,
@@ -712,25 +689,12 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
 
         let instruction = CreateMetadataAccountV3Cpi {
             __program: self.instruction.__program,
-
             metadata: self.instruction.metadata,
-
             mint: self.instruction.mint,
-
-            mint_authority: self
-                .instruction
-                .mint_authority,
-
+            mint_authority: self.instruction.mint_authority,
             payer: self.instruction.payer,
-
-            update_authority: self
-                .instruction
-                .update_authority,
-
-            system_program: self
-                .instruction
-                .system_program,
-
+            update_authority: self.instruction.update_authority,
+            system_program: self.instruction.system_program,
             rent_present: self.instruction.rent_present,
             rent: self.instruction.rent,
             __args: args,
