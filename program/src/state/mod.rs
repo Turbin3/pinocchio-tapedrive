@@ -8,7 +8,7 @@ mod miner;
 mod spool;
 mod tape;
 mod treasury;
-mod utils;
+pub mod utils;
 mod writer;
 
 pub use archive::*;
