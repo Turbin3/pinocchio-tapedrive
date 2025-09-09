@@ -36,6 +36,7 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
 
     let mut miner_data = miner_info.try_borrow_mut_data()?;
     let miner = Miner::unpack_mut(&mut miner_data)?;
+
     if miner.authority != *signer_info.key() {
         return Err(ProgramError::MissingRequiredSignature);
     }
@@ -46,6 +47,7 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
 
     let spool_data = spool_info.try_borrow_data()?;
     let spool = Spool::unpack(&spool_data)?;
+
     if spool.authority != *signer_info.key() {
         return Err(ProgramError::MissingRequiredSignature);
     }

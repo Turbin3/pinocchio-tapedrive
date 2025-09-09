@@ -22,7 +22,6 @@ const-crypto.workspace = true
 shank.workspace = true
 bytemuck.workspace = true
 blake3.workspace = true
-brine-tree = "0.6.2"
 
 [dev-dependencies]
 solana-sdk.workspace = true

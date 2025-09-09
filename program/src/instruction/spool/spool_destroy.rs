@@ -14,7 +14,11 @@ pub fn process_spool_destroy(accounts: &[AccountInfo], _data: &[u8]) -> ProgramR
         return Err(ProgramError::Immutable);
     }
 
-    let spool_data = spool_info.try_borrow_mut_data()?;
+    if !spool_info.is_owned_by(&tape_api::ID) {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    let spool_data = spool_info.try_borrow_data()?;
     let spool = Spool::unpack(&spool_data)?;
 
     if spool.authority != *signer_info.key() {

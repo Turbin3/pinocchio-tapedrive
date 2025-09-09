@@ -5,7 +5,11 @@ use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
     program_error::ProgramError,
-    sysvars::{clock::Clock, rent::Rent, Sysvar},
+    sysvars::{
+        clock::Clock,
+        rent::{Rent, RENT_ID},
+        Sysvar,
+    },
     ProgramResult,
 };
 use pinocchio_system::instructions::CreateAccount;
@@ -32,12 +36,20 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    if rent_info.key() != &RENT_ID {
+        return Err(ProgramError::InvalidArgument);
+    }
+
     if !spool_info.data_is_empty() {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
 
     if !spool_info.is_writable() {
         return Err(ProgramError::Immutable);
+    }
+
+    if !miner_info.is_owned_by(&tape_api::ID) {
+        return Err(ProgramError::IncorrectProgramId);
     }
 
     let miner_data = miner_info.try_borrow_data()?;
@@ -50,7 +62,7 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
     let ix_data = unsafe { load_ix_data::<CreateSpoolIxData>(&data)? };
 
     let spool_number = ix_data.number;
-    let (spool_pda, spool_bump) = spool_pda(*miner_info.key(), spool_number);
+    let (spool_pda, _spool_bump) = spool_pda(*miner_info.key(), spool_number);
 
     if spool_pda.ne(spool_info.key()) {
         return Err(ProgramError::InvalidAccountOwner);
@@ -58,13 +70,11 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
 
     let rent = Rent::from_account_info(rent_info)?;
 
-    let bump_binding = [spool_bump];
     let spool_number_bytes = spool_number.to_le_bytes();
     let signer_seeds = [
         Seed::from(SPOOL),
         Seed::from(miner_info.key().as_ref()),
         Seed::from(&spool_number_bytes),
-        Seed::from(&bump_binding),
     ];
     let signers = [Signer::from(&signer_seeds[..])];
 
