@@ -3,7 +3,7 @@ mod block;
 mod epoch;
 mod miner;
 mod spool;
-mod tape;
+pub mod tape;
 mod treasury;
 pub mod utils;
 mod writer;

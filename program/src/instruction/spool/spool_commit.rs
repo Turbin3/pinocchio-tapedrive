@@ -1,9 +1,27 @@
+use crate::api::prelude::*;
 use crate::api::state::{Miner, Spool};
 use brine_tree::{verify, Leaf};
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
+use tape_api::prelude::DataLen;
 use tape_api::{error::TapeError, utils::check_condition, SEGMENT_PROOF_LEN};
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
+pub struct SpoolCommitIxData {
+    pub value: [u8; 32],
+    pub proof: [[u8; 32]; SEGMENT_PROOF_LEN],
+}
+
+impl DataLen for SpoolCommitIxData {
+    const LEN: usize = core::mem::size_of::<SpoolCommitIxData>();
+}
+
 pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let args = Commit::try_from_bytes(data)?;
+    if data.len() != SpoolCommitIxData::LEN {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+
+    let commit_args = unsafe { load_ix_data::<SpoolCommitIxData>(&data)? };
     let [signer_info, miner_info, spool_info, _remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -16,7 +34,8 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let miner = Miner::unpack_mut(&mut miner_info.try_borrow_mut_data()?)?;
+    let mut miner_data = miner_info.try_borrow_mut_data()?;
+    let miner = Miner::unpack_mut(&mut miner_data)?;
     if miner.authority != *signer_info.key() {
         return Err(ProgramError::MissingRequiredSignature);
     }
@@ -25,26 +44,27 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let spool = Spool::unpack(&spool_info.try_borrow_data()?)?;
+    let spool_data = spool_info.try_borrow_data()?;
+    let spool = Spool::unpack(&spool_data)?;
     if spool.authority != *signer_info.key() {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
     let merkle_root = &spool.contains;
-    let merkle_proof = args.proof.as_ref();
+    let merkle_proof = commit_args.proof.as_ref();
 
     if merkle_proof.len() != SEGMENT_PROOF_LEN {
         return Err(ProgramError::InvalidInstructionData);
     }
 
-    let leaf = Leaf::from(args.value);
+    let leaf = Leaf::from(commit_args.value);
 
     check_condition(
         verify(*merkle_root, merkle_proof, leaf),
         TapeError::SpoolCommitFailed,
     )?;
 
-    miner.commitment = args.value;
+    miner.commitment = commit_args.value;
 
     Ok(())
 }
