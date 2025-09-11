@@ -3,6 +3,8 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 pub mod constant;
 pub mod pda;
 pub mod utils;
+pub mod mine;
+pub mod types;
 
 mod archive;
 mod block;
@@ -23,6 +25,8 @@ pub use tape::*;
 pub use treasury::*;
 pub use utils::*;
 pub use writer::*;
+pub use types::*;
+pub use mine::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]

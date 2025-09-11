@@ -22,6 +22,9 @@ const-crypto.workspace = true
 shank.workspace = true
 bytemuck.workspace = true
 blake3.workspace = true
+packx.workspace = true
+crankx.workspace = true
+brine-tree.workspace = true
 
 [dev-dependencies]
 solana-sdk.workspace = true

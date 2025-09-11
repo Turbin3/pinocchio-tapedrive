@@ -1,4 +1,5 @@
 use crate::state::AccountType;
+use crate::state::DataLen;
 use crate::state::NAME_LEN;
 use crate::utils::AccountDiscriminator;
 use bytemuck::{Pod, Zeroable};
@@ -28,4 +29,8 @@ impl AccountDiscriminator for Miner {
     fn discriminator() -> u8 {
         AccountType::Miner.into()
     }
+}
+
+impl DataLen for Miner {
+    const LEN: usize = 32 + 32 + 8 + 32 + 32 + 8 + 8 + 8 + 8 + 8; // 176 bytes
 }
