@@ -13,7 +13,7 @@ impl DataLen for SubsidizeIxData {
 }
 
 pub fn process_tape_subsidize_rent(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [signer_info, ata_info, tape_info, treasury_ata_info, _token_program_info, remaining @ ..] =
+    let [signer_info, ata_info, tape_info, treasury_ata_info, _token_program_info, _remaining @ ..] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
