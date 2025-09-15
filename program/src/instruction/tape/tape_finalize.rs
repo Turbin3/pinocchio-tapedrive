@@ -1,11 +1,10 @@
-use core::arch;
 use tape_api::prelude::*;
 
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use tape_api::state::{Archive, Tape, Writer};
 
-pub fn process_tape_finalize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [signer_info, tape_info, writer_info, archive_info, system_program_info, rent_sysvar_info, remaining @ ..] =
+pub fn process_tape_finalize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResult {
+    let [signer_info, tape_info, writer_info, archive_info, _system_program_info, _rent_sysvar_info, _remaining @ ..] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -15,7 +14,8 @@ pub fn process_tape_finalize(accounts: &[AccountInfo], data: &[u8]) -> ProgramRe
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    let tape = Tape::unpack_mut(&mut tape_info.try_borrow_mut_data()?)?;
+    let mut tape_data = tape_info.try_borrow_mut_data()?;
+    let tape = Tape::unpack_mut(&mut tape_data)?;
 
     if tape.authority != *signer_info.key() {
         return Err(ProgramError::MissingRequiredSignature);
@@ -29,17 +29,19 @@ pub fn process_tape_finalize(accounts: &[AccountInfo], data: &[u8]) -> ProgramRe
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let writer = Writer::unpack_mut(&mut writer_info.try_borrow_mut_data()?)?;
+    let mut writer_data = writer_info.try_borrow_mut_data()?;
+    let writer = Writer::unpack_mut(&mut writer_data)?;
 
     if writer.tape != *tape_info.key() {
         return Err(ProgramError::InvalidAccountData);
     }
 
-    let mut archive = Archive::unpack_mut(&mut archive_info.try_borrow_mut_data()?)?;
+    let mut archive_data = archive_info.try_borrow_mut_data()?;
+    let archive = Archive::unpack_mut(&mut archive_data)?;
 
-    let (tape_address, tape_bump) = tape_pda(*signer_info.key(), tape.number);
+    let (tape_address, _tape_bump) = tape_pda(*signer_info.key(), &tape.name);
 
-    let (writer_address, writer_bump) = writer_pda(tape_address);
+    let (writer_address, _writer_bump) = writer_pda(tape_address);
 
     if tape_info.key() != &tape_address {
         return Err(ProgramError::InvalidAccountData.into());
