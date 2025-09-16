@@ -19,7 +19,6 @@ crate-type = ["rlib"]
 bytemuck.workspace = true
 num_enum.workspace = true
 const-crypto.workspace = true
-brine-tree = "0.6.0"
 
 pinocchio.workspace = true
 pinocchio-log.workspace = true

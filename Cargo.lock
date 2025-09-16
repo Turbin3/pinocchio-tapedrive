@@ -428,16 +428,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "brine-tree"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5b11ad9401f6073412a81574e1aec09faa1104ce9de2767d2eb4a011d055099"
-dependencies = [
- "blake3",
- "bytemuck",
-]
-
-[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4462,7 +4452,6 @@ name = "tape-api"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "brine-tree",
  "bytemuck",
  "const-crypto",
  "num_enum",
