@@ -10,7 +10,10 @@ pub mod mine;
 pub mod spool;
 pub mod tape;
 
-pub use {init::*, mine::*, spool::*, tape::*};
+pub use init::*;
+pub use mine::*;
+pub use spool::*;
+pub use tape::*;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
