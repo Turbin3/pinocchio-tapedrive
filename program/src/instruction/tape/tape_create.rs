@@ -13,6 +13,7 @@ use {
         consts::{HEADER_SIZE, TAPE, WRITER},
         pda::{tape_pda, writer_pda},
         state::{DataLen, Tape, TapeState, Writer},
+        types::SegmentTree,
     },
 };
 
@@ -128,7 +129,7 @@ pub fn process_tape_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramResu
     let writer = Writer::unpack_mut(&mut writer_info_raw_data)?;
 
     writer.tape = *tape_info.key();
-    // writer.state = *;  # dev : not implemented in Writer layout !
+    writer.state = SegmentTree::new(&[tape_info.key().as_ref()]);
 
     Ok(())
 }
