@@ -4462,6 +4462,7 @@ dependencies = [
  "pinocchio-system",
  "pinocchio-token",
  "shank",
+ "utils",
 ]
 
 [[package]]

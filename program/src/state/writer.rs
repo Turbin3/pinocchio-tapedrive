@@ -2,12 +2,13 @@ use crate::state::AccountType;
 use crate::utils::AccountDiscriminator;
 use bytemuck::{Pod, Zeroable};
 use pinocchio::pubkey::Pubkey;
+use tape_api::types::SegmentTree;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Writer {
     pub tape: Pubkey,
-    // pub state: SegmentTree,
+    pub state: SegmentTree,
 }
 
 impl AccountDiscriminator for Writer {
