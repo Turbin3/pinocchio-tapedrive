@@ -10,7 +10,7 @@ pub struct Spool {
     pub number: u64,
 
     pub authority: Pubkey,
-    // pub state: TapeTree,
+    pub state: TapeTree,
     pub seed: [u8; 32],
     pub contains: [u8; 32],
 
