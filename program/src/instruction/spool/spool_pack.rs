@@ -1,13 +1,12 @@
 use crate::api::prelude::*;
-use crate::api::state::Tape;
-use brine_tree::Leaf;
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use tape_api::utils::check_condition;
-use tape_api::MAX_TAPES_PER_SPOOL;
 use tape_api::{
     error::TapeError,
     state::{Spool, TapeState},
+    utils::check_condition,
+    MAX_TAPES_PER_SPOOL,
 };
+use tape_utils::leaf::Leaf;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
@@ -64,10 +63,10 @@ pub fn process_spool_pack(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
     let tape_id = tape.number.to_le_bytes();
     let leaf = Leaf::new(&[tape_id.as_ref(), &pack_args.value]);
 
-    // check_condition(
-    //     spool.state.try_add_leaf(leaf).is_ok(),
-    //     TapeError::SpoolPackFailed,
-    // )?;
+    check_condition(
+        spool.state.try_add_leaf(leaf).is_ok(),
+        TapeError::SpoolPackFailed,
+    )?;
 
     spool.total_tapes += 1;
 

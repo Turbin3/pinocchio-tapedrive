@@ -1,5 +1,5 @@
-use crate::api::state::Spool;
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
+use tape_api::prelude::*;
 
 pub fn process_spool_destroy(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResult {
     let [signer_info, spool_info, _system_program_info, _remaining @ ..] = accounts else {

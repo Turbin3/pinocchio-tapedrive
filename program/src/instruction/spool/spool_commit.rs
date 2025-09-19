@@ -1,9 +1,6 @@
-use crate::api::prelude::*;
-use crate::api::state::{Miner, Spool};
-use brine_tree::{verify, Leaf};
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use tape_api::prelude::DataLen;
-use tape_api::{error::TapeError, utils::check_condition, SEGMENT_PROOF_LEN};
+use tape_api::prelude::*;
+use tape_utils::{leaf::Leaf, tree::verify_no_std};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
@@ -62,7 +59,7 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
     let leaf = Leaf::from(commit_args.value);
 
     check_condition(
-        verify(*merkle_root, merkle_proof, leaf),
+        verify_no_std(*merkle_root, merkle_proof, leaf),
         TapeError::SpoolCommitFailed,
     )?;
 

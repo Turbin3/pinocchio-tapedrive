@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # Local dependencies
 tape-api = { path = "../api" }
+tape-utils = { path = "../utils", package = "utils" }
 
 # Workspace dependencies
 pinocchio.workspace = true

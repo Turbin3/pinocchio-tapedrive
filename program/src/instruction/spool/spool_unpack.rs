@@ -1,7 +1,6 @@
 use crate::api::prelude::*;
-use brine_tree::Leaf;
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
-use tape_api::{state::Spool, utils::check_condition, SEGMENT_PROOF_LEN};
+use tape_utils::leaf::Leaf;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
 pub struct SpoolUnpackIxData {
@@ -43,10 +42,10 @@ pub fn process_spool_unpack(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
 
     let leaf = Leaf::new(&[tape_id.as_ref(), &unpack_args.value]);
 
-    // check_condition(
-    //     spool.state.contains_leaf(&merkle_proof, leaf),
-    //     TapeError::SpoolUnpackFailed,
-    // )?;
+    check_condition(
+        spool.state.contains_leaf(&merkle_proof, leaf),
+        TapeError::SpoolUnpackFailed,
+    )?;
 
     spool.contains = unpack_args.value;
 

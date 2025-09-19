@@ -1,6 +1,3 @@
-use crate::api::prelude::*;
-use crate::api::state::utils::DataLen as ApiDataLen;
-use crate::api::state::Spool;
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -13,6 +10,8 @@ use pinocchio::{
     ProgramResult,
 };
 use pinocchio_system::instructions::CreateAccount;
+use tape_api::prelude::*;
+use tape_api::state::utils::DataLen as ApiDataLen;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
@@ -95,7 +94,7 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
     spool.last_proof_at = current_time;
     spool.last_proof_block = 0;
     // spool.seed =
-    // spool.state = TapeTree::new(&[spool_info.key.as_ref()]);
+    spool.state = TapeTree::new(&[spool_info.key().as_ref()]);
     spool.contains = [0; 32];
     spool.total_tapes = 0;
 
