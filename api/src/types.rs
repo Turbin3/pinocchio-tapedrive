@@ -1,10 +1,10 @@
 use crate::consts::*;
-// use brine_tree::MerkleTree;
+use utils::tree::MerkleTree;
 use bytemuck::{Pod, Zeroable};
 use core::ops::{Deref, Index};
 use pinocchio::program_error::ProgramError;
-// pub type SegmentTree = MerkleTree<{ SEGMENT_TREE_HEIGHT }>;
-// pub type TapeTree = MerkleTree<{ TAPE_TREE_HEIGHT }>;
+pub type SegmentTree = MerkleTree<{ SEGMENT_TREE_HEIGHT }>;
+pub type TapeTree = MerkleTree<{ TAPE_TREE_HEIGHT }>;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
