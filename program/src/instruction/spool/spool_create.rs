@@ -1,3 +1,4 @@
+use bytemuck::{try_from_bytes, Pod, Zeroable};
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -14,7 +15,7 @@ use tape_api::prelude::*;
 use tape_api::state::utils::DataLen as ApiDataLen;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
+#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType, Pod, Zeroable)]
 pub struct CreateSpoolIxData {
     pub number: u64,
 }
@@ -58,7 +59,8 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    let ix_data = unsafe { load_ix_data::<CreateSpoolIxData>(&data)? };
+    let ix_data = try_from_bytes::<CreateSpoolIxData>(&data)
+        .map_err(|_| ProgramError::InvalidInstructionData)?;
 
     let spool_number = ix_data.number;
     let (spool_pda, _spool_bump) = spool_pda(*miner_info.key(), spool_number);

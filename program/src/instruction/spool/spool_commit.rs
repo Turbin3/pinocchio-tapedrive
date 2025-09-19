@@ -1,9 +1,10 @@
+use bytemuck::{try_from_bytes, Pod, Zeroable};
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use tape_api::prelude::*;
 use tape_utils::{leaf::Leaf, tree::verify_no_std};
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
+#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType, Pod, Zeroable)]
 pub struct SpoolCommitIxData {
     pub value: [u8; 32],
     pub proof: [[u8; 32]; SEGMENT_PROOF_LEN],
@@ -18,7 +19,8 @@ pub fn process_spool_commit(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::InvalidInstructionData);
     }
 
-    let commit_args = unsafe { load_ix_data::<SpoolCommitIxData>(&data)? };
+    let commit_args = try_from_bytes::<SpoolCommitIxData>(data)
+        .map_err(|_| ProgramError::InvalidInstructionData)?;
     let [signer_info, miner_info, spool_info, _remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

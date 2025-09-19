@@ -1,4 +1,5 @@
 use crate::api::prelude::*;
+use bytemuck::{try_from_bytes, Pod, Zeroable};
 use pinocchio::{account_info::AccountInfo, program_error::ProgramError, ProgramResult};
 use tape_api::{
     error::TapeError,
@@ -9,7 +10,7 @@ use tape_api::{
 use tape_utils::leaf::Leaf;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType)]
+#[derive(Clone, Copy, Debug, PartialEq, shank::ShankType, Pod, Zeroable)]
 pub struct Pack {
     pub value: [u8; 32],
 }
@@ -19,7 +20,8 @@ impl DataLen for Pack {
 }
 
 pub fn process_spool_pack(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let pack_args = unsafe { load_ix_data::<Pack>(&data)? };
+    let pack_args =
+        try_from_bytes::<Pack>(data).map_err(|_| ProgramError::InvalidInstructionData)?;
 
     let [signer_info, spool_info, tape_info, _remaining @ ..] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
