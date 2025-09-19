@@ -1,4 +1,9 @@
-use pinocchio::program_error::ProgramError;
+use {
+    bytemuck::{Pod, Zeroable},
+    pinocchio::program_error::ProgramError,
+    tape_api::consts::{HEADER_SIZE, NAME_LEN, SEGMENT_SIZE},
+    tape_api::types::ProofPath,
+};
 
 pub mod init;
 pub mod mine;
@@ -9,6 +14,43 @@ pub use init::*;
 pub use mine::*;
 pub use spool::*;
 pub use tape::*;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Create {
+    pub name: [u8; NAME_LEN],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Write {
+    // Phantom Vec<u8> to ensure the size is dynamic
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Update {
+    pub segment_number: [u8; 8],
+    pub old_data: [u8; SEGMENT_SIZE],
+    pub new_data: [u8; SEGMENT_SIZE],
+    pub proof: ProofPath,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Finalize {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetHeader {
+    pub header: [u8; HEADER_SIZE],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Subsidize {
+    pub amount: [u8; 8],
+}
 
 #[repr(u8)]
 pub enum TapeInstruction {
