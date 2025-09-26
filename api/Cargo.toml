@@ -23,7 +23,6 @@ bytemuck.workspace = true
 num_enum.workspace = true
 const-crypto.workspace = true
 
-
 pinocchio.workspace = true
 pinocchio-log.workspace = true
 pinocchio-pubkey.workspace = true
