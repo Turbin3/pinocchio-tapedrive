@@ -1,4 +1,5 @@
 use crate::state::utils::{load_acc, load_acc_mut, DataLen, Initialized};
+use crate::types::SegmentTree;
 
 use bytemuck::{Pod, Zeroable};
 use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
@@ -7,7 +8,7 @@ use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Writer {
     pub tape: Pubkey,
-    // pub state: SegmentTree,
+    pub state: SegmentTree,
 }
 
 impl DataLen for Writer {

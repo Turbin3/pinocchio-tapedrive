@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "program",
-    "api",
+    "api", "utils",
 ]
 resolver = "2"
 
@@ -29,10 +29,10 @@ num_enum = "0.7.2"
 const-crypto = "0.3.0"
 shank = "0.4.2"
 bytemuck = { version = "1.23.0", features = ["derive"] }
-brine-tree = "0.6.2"
+brine-tree = { version= "0.6.2" }
 packx = { version = "0.3.1", default-features = false  }
 crankx = { version = "0.2.2", default-features = false  }
-blake3 = "1.8.2"
+blake3 = { version = "1.8.2", default-features = false}
 
 # Solana dependencies - use compatible versions
 # solana-program = "2.2.1"
