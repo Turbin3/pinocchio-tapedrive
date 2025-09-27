@@ -1,4 +1,4 @@
-use crate::state::AccountType;
+use crate::state::{AccountType, DataLen};
 use crate::utils::AccountDiscriminator;
 use bytemuck::{Pod, Zeroable};
 
@@ -19,4 +19,8 @@ impl AccountDiscriminator for Block {
     fn discriminator() -> u8 {
         AccountType::Block.into()
     }
+}
+
+impl DataLen for Block {
+    const LEN: usize = 8 + 8 + 32 + 8 + 8 + 8; // 72 bytes
 }

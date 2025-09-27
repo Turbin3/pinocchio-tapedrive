@@ -1,4 +1,4 @@
-use crate::state::AccountType;
+use crate::state::{AccountType, DataLen};
 use crate::utils::AccountDiscriminator;
 use bytemuck::{Pod, Zeroable};
 
@@ -21,4 +21,8 @@ impl AccountDiscriminator for Epoch {
     fn discriminator() -> u8 {
         AccountType::Epoch.into()
     }
+}
+
+impl DataLen for Epoch {
+    const LEN: usize = 8 + 8 + 8 + 8 + 8 + 8 + 8 + 8; // 64 bytes
 }

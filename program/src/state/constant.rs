@@ -44,3 +44,12 @@ pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, MINT_SEED], &T
 pub const TREASURY_ADDRESS: Pubkey = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).0;
 
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &TAPE_ID).1;
+
+/// Duration of one block in seconds (~1 minute)
+pub const BLOCK_DURATION_SECONDS: u64 = 60;
+/// Number of blocks per epoch (~10 minutes)
+pub const EPOCH_BLOCKS: u64 = 10;
+/// Adjustment interval (in epochs)
+pub const ADJUSTMENT_INTERVAL: u64 = 50;
+/// Number of blocks per year
+pub const BLOCKS_PER_YEAR: u64 = 60 * 60 * 24 * 365 / BLOCK_DURATION_SECONDS;
