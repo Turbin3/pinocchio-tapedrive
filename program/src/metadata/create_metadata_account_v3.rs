@@ -5,8 +5,8 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::api::metadata::collection_details::CollectionDetails;
-use crate::api::metadata::data_v2::DataV2;
+use crate::metadata::collection_details::CollectionDetails;
+use crate::metadata::data_v2::DataV2;
 use core::mem::MaybeUninit;
 use pinocchio::{
     program,

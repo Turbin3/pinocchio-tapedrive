@@ -5,9 +5,9 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::api::metadata::collection::Collection;
-use crate::api::metadata::creator::Creator;
-use crate::api::metadata::uses::Uses;
+use crate::metadata::collection::Collection;
+use crate::metadata::creator::Creator;
+use crate::metadata::uses::Uses;
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Pod, Zeroable)]

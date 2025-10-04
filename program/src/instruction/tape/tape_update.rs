@@ -14,7 +14,7 @@ use {
         state::{Tape, TapeState, Writer},
         utils::check_condition,
     },
-    utils::leaf::Leaf,
+    tape_utils::leaf::Leaf,
 };
 
 pub fn process_tape_update(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {

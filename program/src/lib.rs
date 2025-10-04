@@ -8,6 +8,7 @@ extern crate std;
 
 pub mod error;
 pub mod instruction;
+pub mod metadata;
 pub mod state;
 pub mod utils;
 
