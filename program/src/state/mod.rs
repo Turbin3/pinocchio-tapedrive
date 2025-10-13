@@ -1,15 +1,15 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 pub mod constant;
-pub mod pda;
-pub mod utils;
 pub mod mine;
+pub mod pda;
 pub mod types;
+pub mod utils;
 
 mod archive;
 mod block;
 mod epoch;
-mod miner;
+pub mod miner;
 mod spool;
 mod tape;
 mod treasury;
@@ -19,14 +19,14 @@ pub use archive::*;
 pub use block::*;
 pub use constant::*;
 pub use epoch::*;
+pub use mine::*;
 pub use miner::*;
 pub use spool::*;
 pub use tape::*;
 pub use treasury::*;
+pub use types::*;
 pub use utils::*;
 pub use writer::*;
-pub use types::*;
-pub use mine::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]

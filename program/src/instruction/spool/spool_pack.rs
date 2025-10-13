@@ -53,7 +53,7 @@ pub fn process_spool_pack(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
         return Err(TapeError::UnexpectedState.into());
     }
 
-    if !tape.number > 0 {
+    if tape.number == 0 {
         return Err(TapeError::UnexpectedState.into());
     }
 

@@ -15,4 +15,4 @@ pub mod utils;
 // Import the API crate
 pub use tape_api as api;
 
-pinocchio_pubkey::declare_id!("ENrRns55VechXJiq4bMbdx7idzQh7tvaEJoYeWxRNe7Y");
+pinocchio_pubkey::declare_id!("7wApqqrfJo2dAGAKVgheccaVEgeDoqVKogtJSTbFRWn2");

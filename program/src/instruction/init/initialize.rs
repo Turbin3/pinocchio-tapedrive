@@ -1,11 +1,4 @@
 use crate::instruction::mine::miner_mine::get_base_rate;
-use crate::metadata::{
-    collection_details::CollectionDetails,
-    create_metadata_account_v3::{
-        CreateMetadataAccountV3Cpi, CreateMetadataAccountV3InstructionArgs,
-    },
-    data_v2::DataV2,
-};
 use crate::state::*;
 use crate::utils::account_traits::AccountInfoExt;
 use crate::utils::get_pda::GetPda;
@@ -15,6 +8,7 @@ use pinocchio::{
     account_info::AccountInfo,
     cpi::{slice_invoke, slice_invoke_signed},
     instruction::{AccountMeta, Instruction, Seed, Signer},
+    msg,
     program_error::ProgramError,
     sysvars::{rent::Rent, Sysvar},
     ProgramResult,
@@ -27,14 +21,17 @@ use tape_api::consts::{
     MIN_MINING_DIFFICULTY, MIN_PACKING_DIFFICULTY, MIN_PARTICIPATION_TARGET, TOKEN_DECIMALS,
     TREASURY_BUMP,
 };
-use tape_api::instruction::tape::{
-    build_create_ix_data, build_finalize_ix_data, build_subsidize_ix_data, build_write_ix_data,
-};
-use tape_api::pda::{tape_pda, writer_pda};
-use tape_api::rent::min_finalization_rent;
-use tape_api::utils::{compute_next_challenge, to_name};
+use tape_api::utils::compute_next_challenge;
 
-/// Helper to convert string to fixed-size [u8; N] array (padded with zeros)
+// Borsh serialization for metadata CPI
+use borsh::BorshSerialize;
+
+extern crate alloc;
+use alloc::string::{String, ToString};
+use alloc::vec;
+use alloc::vec::Vec;
+
+/// Helper to convert string to fixed-size array
 #[inline(always)]
 fn string_to_bytes<const N: usize>(s: &str) -> [u8; N] {
     let mut out = [0u8; N];
@@ -44,13 +41,14 @@ fn string_to_bytes<const N: usize>(s: &str) -> [u8; N] {
     out
 }
 
-/// Helper to convert URI string to [u64; 32] array for DataV2
+/// Helper to convert URI string to [u64; 32] array (unused)
 #[inline(always)]
+#[allow(dead_code)]
 fn string_to_uri(s: &str) -> [u64; 32] {
     let bytes = s.as_bytes();
     let mut uri = [0u64; 32];
 
-    // Pack bytes into u64s (8 bytes per u64)
+    // Pack bytes into u64s
     for i in 0..min(bytes.len(), 256) {
         let byte_pos = i / 8;
         let shift = (i % 8) * 8;
@@ -58,6 +56,79 @@ fn string_to_uri(s: &str) -> [u64; 32] {
     }
 
     uri
+}
+
+/// Metaplex Token Metadata DataV2 struct (Borsh-serializable)
+#[derive(BorshSerialize)]
+struct MetadataDataV2 {
+    name: String,
+    symbol: String,
+    uri: String,
+    seller_fee_basis_points: u16,
+    creators: Option<Vec<MetadataCreator>>,
+    collection: Option<MetadataCollection>,
+    uses: Option<MetadataUses>,
+}
+
+/// Metaplex Creator struct
+#[derive(BorshSerialize)]
+struct MetadataCreator {
+    address: [u8; 32],
+    verified: bool,
+    share: u8,
+}
+
+/// Metaplex Collection struct
+#[derive(BorshSerialize)]
+struct MetadataCollection {
+    verified: bool,
+    key: [u8; 32],
+}
+
+/// Metaplex Uses struct
+#[derive(BorshSerialize)]
+struct MetadataUses {
+    use_method: u8,
+    remaining: u64,
+    total: u64,
+}
+
+/// CreateMetadataAccountV3 instruction args
+#[derive(BorshSerialize)]
+struct CreateMetadataAccountV3Args {
+    data: MetadataDataV2,
+    is_mutable: bool,
+    collection_details: Option<u8>, // Simplified - None for our use case
+}
+
+/// Build Borsh-serialized metadata instruction data using proper borsh crate with std
+fn build_metadata_instruction_data_borsh(
+    name: &str,
+    symbol: &str,
+    uri: &str,
+    seller_fee_basis_points: u16,
+    is_mutable: bool,
+) -> Result<Vec<u8>, ProgramError> {
+    let args = CreateMetadataAccountV3Args {
+        data: MetadataDataV2 {
+            name: name.to_string(),
+            symbol: symbol.to_string(),
+            uri: uri.to_string(),
+            seller_fee_basis_points,
+            creators: None,
+            collection: None,
+            uses: None,
+        },
+        is_mutable,
+        collection_details: None,
+    };
+
+    // Build instruction data
+    let mut data = vec![33]; // CreateMetadataAccountV3 discriminator
+    args.serialize(&mut data)
+        .map_err(|_| ProgramError::InvalidInstructionData)?;
+
+    Ok(data)
 }
 
 pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResult {
@@ -93,13 +164,9 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         return Err(ProgramError::Immutable);
     }
 
+    // Only check that tape_program_info matches TAPE_ID
+    // Verify program ownership
     tape_program_info.is_program_check()?;
-    system_program_info.is_program_check()?;
-    token_program_info.is_program_check()?;
-    associated_token_program_info.is_program_check()?;
-    metadata_program_info.is_program_check()?;
-    rent_sysvar_info.is_program_check()?;
-    slot_hashes_info.is_program_check()?;
 
     // Initialize epoch
     create_program_account::<Epoch>(
@@ -110,7 +177,7 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         &[EPOCH],
     )?;
 
-    // Set epoch fields using bytemuck (safe, no unsafe!)
+    // Set epoch fields
     {
         let mut epoch_data = epoch_info.try_borrow_mut_data()?;
         let epoch = cast_account_data_mut::<Epoch>(&mut epoch_data)?;
@@ -165,7 +232,7 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         archive.segments_stored = 0;
     }
 
-    // Initialize treasury (empty struct, no fields to initialize)
+    // Initialize treasury
     create_program_account::<Treasury>(
         treasury_info,
         system_program_info,
@@ -174,7 +241,7 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         &[TREASURY],
     )?;
 
-    // Initialize mint (allocate + initialize)
+    // Initialize mint
     {
         let rent = Rent::get()?;
         let mint_space = pinocchio_token::state::Mint::LEN;
@@ -209,30 +276,51 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         .invoke()?;
     }
 
-    // Initialize mint metadata
+    // Initialize mint metadata using Pinocchio CPI with Borsh serialization
     {
-        // Build DataV2 metadata
-        let metadata_data = DataV2 {
-            name: string_to_bytes::<32>(METADATA_NAME),
-            symbol: string_to_bytes::<10>(METADATA_SYMBOL),
-            uri: string_to_uri(METADATA_URI),
-            seller_fee_basis_points: 0,
-            creator_count: 0,
-            creators: [crate::metadata::creator::Creator::none(); 5],
-            collection: crate::metadata::collection::Collection::none(),
-            uses: crate::metadata::uses::Uses::none(),
+        let instruction_data = build_metadata_instruction_data_borsh(
+            METADATA_NAME,
+            METADATA_SYMBOL,
+            METADATA_URI,
+            0,    // seller_fee_basis_points
+            true, // is_mutable
+        )?;
+
+        // Build CPI instruction to Metaplex
+        // Account order for CreateMetadataAccountV3:
+        // 0. metadata (writable)
+        // 1. mint (readonly)
+        // 2. mint_authority (readonly, signer via PDA)
+        // 3. payer (writable, signer)
+        // 4. update_authority (writable, signer)
+        // 5. system_program (readonly)
+        // 6. rent (readonly)
+        let instruction = Instruction {
+            program_id: &MPL_TOKEN_METADATA_ID,
+            accounts: &[
+                AccountMeta::writable(metadata_info.key()),
+                AccountMeta::readonly(mint_info.key()),
+                AccountMeta::readonly_signer(treasury_info.key()),
+                AccountMeta::writable_signer(signer_info.key()),
+                AccountMeta::writable_signer(signer_info.key()),
+                AccountMeta::readonly(system_program_info.key()),
+                AccountMeta::readonly(rent_sysvar_info.key()),
+            ],
+            data: &instruction_data,
         };
 
-        // Build instruction args
-        let args = CreateMetadataAccountV3InstructionArgs {
-            data: metadata_data,
-            is_mutable: 1, // true
-            collection_details: CollectionDetails::default(),
-            collection_details_present: 0, // None
-            _padding: [0; 6],
-        };
+        // Prepare account infos for CPI
+        let account_infos = [
+            metadata_info,
+            mint_info,
+            treasury_info,
+            signer_info,
+            signer_info,
+            system_program_info,
+            rent_sysvar_info,
+        ];
 
-        // Create treasury signer for signing the metadata creation
+        // Invoke with treasury PDA as signer
         let treasury_bump_binding = [TREASURY_BUMP];
         let treasury_seeds = [
             Seed::from(TREASURY),
@@ -240,23 +328,10 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         ];
         let treasury_signer = [Signer::from(&treasury_seeds)];
 
-        // Invoke CreateMetadataAccountV3
-        CreateMetadataAccountV3Cpi {
-            __program: metadata_program_info,
-            metadata: metadata_info,
-            mint: mint_info,
-            mint_authority: treasury_info,
-            payer: signer_info,
-            update_authority: (signer_info, true),
-            system_program: system_program_info,
-            rent_present: 1, // Some
-            rent: rent_sysvar_info,
-            __args: args,
-        }
-        .invoke_signed(&treasury_signer)?;
+        slice_invoke_signed(&instruction, &account_infos, &treasury_signer)?;
     }
 
-    // Initialize treasury token account (ATA)
+    // Initialize treasury ATA
     CreateATA {
         funding_account: signer_info,
         account: treasury_ata_info,
@@ -284,143 +359,6 @@ pub fn process_initialize(accounts: &[AccountInfo], _data: &[u8]) -> ProgramResu
         }
         .invoke_signed(&treasury_signer)?;
     }
-
-    // ============================================================
-    // Create the genesis tape
-    // ============================================================
-
-    let genesis_name = "genesis";
-
-    // Build create tape instruction data
-    let mut create_ix_data = [0u8; 128]; // Buffer for instruction data
-    let (create_data_len, tape_address, writer_address) =
-        build_create_ix_data(signer_info.key(), genesis_name, &mut create_ix_data);
-
-    // Create the tape
-    {
-        let create_account_metas = [
-            AccountMeta::new(signer_info.key(), true, true), // writable, signer
-            AccountMeta::new(&tape_address, true, false),    // writable, not signer
-            AccountMeta::new(&writer_address, true, false),  // writable, not signer
-            AccountMeta::new(system_program_info.key(), false, false), // readonly, not signer
-            AccountMeta::new(rent_sysvar_info.key(), false, false), // readonly, not signer
-            AccountMeta::new(slot_hashes_info.key(), false, false), // readonly, not signer
-        ];
-
-        let create_instruction = Instruction {
-            program_id: &TAPE_ID,
-            accounts: &create_account_metas,
-            data: &create_ix_data[..create_data_len],
-        };
-
-        slice_invoke(
-            &create_instruction,
-            &[
-                signer_info,
-                tape_info,
-                writer_info,
-                system_program_info,
-                rent_sysvar_info,
-                slot_hashes_info,
-            ],
-        )?;
-    }
-
-    // Write "hello, world" to the tape
-    {
-        let mut write_ix_data = [0u8; 256]; // Buffer for write instruction data
-        let write_data = b"hello, world";
-        let write_data_len = build_write_ix_data(write_data, &mut write_ix_data);
-
-        let write_account_metas = [
-            AccountMeta::new(signer_info.key(), true, true), // writable, signer
-            AccountMeta::new(&tape_address, true, false),    // writable, not signer
-            AccountMeta::new(&writer_address, true, false),  // writable, not signer
-        ];
-
-        let write_instruction = Instruction {
-            program_id: &TAPE_ID,
-            accounts: &write_account_metas,
-            data: &write_ix_data[..write_data_len],
-        };
-
-        slice_invoke(&write_instruction, &[signer_info, tape_info, writer_info])?;
-    }
-
-    // Subsidize the tape for 1 block
-    {
-        let mut subsidize_ix_data = [0u8; 64]; // Buffer for subsidize instruction data
-        let subsidize_amount = min_finalization_rent(1);
-        let subsidize_data_len = build_subsidize_ix_data(subsidize_amount, &mut subsidize_ix_data);
-
-        let subsidize_account_metas = [
-            AccountMeta::new(treasury_info.key(), true, true), // writable, signer
-            AccountMeta::new(treasury_ata_info.key(), true, false), // writable, not signer
-            AccountMeta::new(&tape_address, true, false),      // writable, not signer
-            AccountMeta::new(treasury_ata_info.key(), true, false), // writable, not signer (destination)
-            AccountMeta::new(token_program_info.key(), false, false), // readonly, not signer
-        ];
-
-        let subsidize_instruction = Instruction {
-            program_id: &TAPE_ID,
-            accounts: &subsidize_account_metas,
-            data: &subsidize_ix_data[..subsidize_data_len],
-        };
-
-        let treasury_bump_binding = [TREASURY_BUMP];
-        let treasury_seeds = [
-            Seed::from(TREASURY),
-            Seed::from(treasury_bump_binding.as_slice()),
-        ];
-        let treasury_signer = [Signer::from(&treasury_seeds)];
-
-        slice_invoke_signed(
-            &subsidize_instruction,
-            &[
-                treasury_info,
-                treasury_ata_info,
-                tape_info,
-                treasury_ata_info, // same account again for destination
-                token_program_info,
-            ],
-            &treasury_signer,
-        )?;
-    }
-
-    // Finalize the tape
-    {
-        let mut finalize_ix_data = [0u8; 64]; // Buffer for finalize instruction data
-        let finalize_data_len = build_finalize_ix_data(&mut finalize_ix_data);
-
-        let finalize_account_metas = [
-            AccountMeta::new(signer_info.key(), true, true), // writable, signer
-            AccountMeta::new(&tape_address, true, false),    // writable, not signer
-            AccountMeta::new(&writer_address, true, false),  // writable, not signer
-            AccountMeta::new(archive_info.key(), true, false), // writable, not signer
-            AccountMeta::new(system_program_info.key(), false, false), // readonly, not signer
-            AccountMeta::new(rent_sysvar_info.key(), false, false), // readonly, not signer
-        ];
-
-        let finalize_instruction = Instruction {
-            program_id: &TAPE_ID,
-            accounts: &finalize_account_metas,
-            data: &finalize_ix_data[..finalize_data_len],
-        };
-
-        slice_invoke(
-            &finalize_instruction,
-            &[
-                signer_info,
-                tape_info,
-                writer_info,
-                archive_info,
-                system_program_info,
-                rent_sysvar_info,
-            ],
-        )?;
-    }
-
-    // ============================================================
 
     Ok(())
 }

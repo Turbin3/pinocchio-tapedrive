@@ -33,7 +33,7 @@ pub fn process_tape_set_header(accounts: &[AccountInfo], data: &[u8]) -> Program
     };
 
     check_condition(
-        tape.state.eq(&(u64::from(TapeState::Writing as u8))),
+        tape.state.eq(&(TapeState::Writing as u64)),
         TapeError::UnexpectedState,
     )?;
 

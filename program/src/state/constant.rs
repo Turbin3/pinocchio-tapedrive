@@ -14,10 +14,8 @@ pub const NAME_LEN: usize = 32;
 /// Header size in bytes
 pub const HEADER_SIZE: usize = 64;
 
-pub const TAPE_ID: Pubkey = [
-    13, 54, 220, 252, 136, 247, 73, 20, 47, 6, 78, 137, 18, 160, 48, 203, 213, 61, 221, 159, 81,
-    168, 160, 144, 213, 135, 83, 108, 248, 37, 140, 51,
-];
+// Use the ID from tape_api instead of hardcoding to ensure they match
+pub const TAPE_ID: Pubkey = tape_api::ID;
 
 pub const MPL_TOKEN_METADATA_ID: Pubkey = [
     11, 112, 101, 177, 227, 209, 124, 69, 56, 157, 82, 127, 107, 4, 195, 205, 88, 184, 108, 115,

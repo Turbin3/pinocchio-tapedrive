@@ -52,6 +52,12 @@ pub struct Subsidize {
     pub amount: [u8; 8],
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Claim {
+    pub amount: [u8; 8],
+}
+
 #[repr(u8)]
 pub enum TapeInstruction {
     // ProgramInstruction variants

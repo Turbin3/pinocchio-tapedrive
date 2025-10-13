@@ -12,7 +12,7 @@ use bytemuck::{Pod, Zeroable};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Pod, Zeroable)]
 #[repr(C)]
-pub struct DataV2 {    
+pub struct DataV2 {
     pub uri: [u64; 32],
     pub seller_fee_basis_points: u16,
     pub name: [u8; 32],

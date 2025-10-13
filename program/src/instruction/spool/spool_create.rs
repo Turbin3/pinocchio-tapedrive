@@ -1,4 +1,5 @@
-use bytemuck::{try_from_bytes, Pod, Zeroable};
+use crate::state::utils::{load_ix_data, DataLen};
+use bytemuck::{Pod, Zeroable};
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -59,8 +60,7 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    let ix_data = try_from_bytes::<CreateSpoolIxData>(&data)
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+    let ix_data = unsafe { load_ix_data::<CreateSpoolIxData>(&data)? };
 
     let spool_number = ix_data.number;
     let (spool_pda, _spool_bump) = spool_pda(*miner_info.key(), spool_number);
@@ -72,10 +72,12 @@ pub fn process_spool_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramRes
     let rent = Rent::from_account_info(rent_info)?;
 
     let spool_number_bytes = spool_number.to_le_bytes();
+    let bump_binding = [_spool_bump];
     let signer_seeds = [
         Seed::from(SPOOL),
         Seed::from(miner_info.key().as_ref()),
         Seed::from(&spool_number_bytes),
+        Seed::from(&bump_binding),
     ];
     let signers = [Signer::from(&signer_seeds[..])];
 

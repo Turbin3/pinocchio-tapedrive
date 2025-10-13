@@ -27,4 +27,4 @@ pub mod prelude {
     pub use crate::utils::*;
 }
 
-pinocchio_pubkey::declare_id!("tape9hFAE7jstfKB2QT1ovFNUZKKtDUyGZiGQpnBFdL");
+pinocchio_pubkey::declare_id!("7wApqqrfJo2dAGAKVgheccaVEgeDoqVKogtJSTbFRWn2");
