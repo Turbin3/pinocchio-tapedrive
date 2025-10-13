@@ -18,7 +18,6 @@ pub struct Tape {
     pub authority: Pubkey,
 
     pub name: [u8; NAME_LEN],
-    pub merkle_seed: [u8; 32],
     pub merkle_root: [u8; 32],
     pub header: [u8; HEADER_SIZE],
 
@@ -46,7 +45,7 @@ impl AccountDiscriminator for Tape {
 }
 
 impl DataLen for Tape {
-    const LEN: usize = 8 + 8 + 32 + NAME_LEN + 32 + 32 + HEADER_SIZE + 8 + 8 + 8 + 8 + 8; // 248 bytes
+    const LEN: usize = 8 + 8 + 32 + NAME_LEN + 32 + HEADER_SIZE + 8 + 8 + 8 + 8 + 8; // 216 bytes (matches native)
 }
 
 impl Tape {

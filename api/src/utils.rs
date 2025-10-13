@@ -13,6 +13,9 @@ use pinocchio::{
 };
 use pinocchio_system::instructions::CreateAccount;
 
+/// SlotHash from Solana's slot_hashes sysvar (Slot + Hash = 8 + 32 = 40 bytes)
+const SLOTHASH_SIZE: usize = 40;
+
 #[inline(always)]
 pub fn check_condition<E>(condition: bool, err: E) -> ProgramResult
 where
@@ -92,13 +95,20 @@ pub fn compute_next_challenge(
     current_challenge: &[u8; 32],
     slot_hashes_info: &AccountInfo,
 ) -> Result<[u8; 32], ProgramError> {
-    let clock = Clock::from_account_info(slot_hashes_info)?;
-    let slot_bytes = clock.slot.to_le_bytes();
+    // Read the first SlotHash from the SlotHashes sysvar
+    // SlotHash is 40 bytes: 8 bytes (slot) + 32 bytes (hash)
+    let slothash_data = slot_hashes_info.try_borrow_data()?;
 
+    if slothash_data.len() < SLOTHASH_SIZE {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    let slothash = &slothash_data[0..SLOTHASH_SIZE];
+
+    // Hash current_challenge + slothash using blake3
     let mut hasher = Hasher::new();
-
     hasher.update(current_challenge);
-    hasher.update(&slot_bytes);
+    hasher.update(slothash);
     let challenge = hasher.finalize();
 
     Ok(challenge.into())

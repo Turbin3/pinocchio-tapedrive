@@ -1,6 +1,8 @@
-use crate::state::constant::{ MINT_BUMP, TREASURY_BUMP, MINT_ADDRESS, TREASURY_ADDRESS, NAME_LEN, TAPE, WRITER, TAPE_ID};
-use pinocchio::pubkey::{self, Pubkey};
+use crate::state::constant::{
+    MINT_ADDRESS, MINT_BUMP, NAME_LEN, TAPE, TAPE_ID, TREASURY_ADDRESS, TREASURY_BUMP, WRITER,
+};
 use core::mem::MaybeUninit;
+use pinocchio::pubkey::{self, Pubkey};
 
 pub fn pda_derive_address<const N: usize>(
     seeds: &[&[u8]; N],
@@ -51,7 +53,7 @@ pub fn pda_derive_address<const N: usize>(
 
         // SAFETY: `data` has `i + 2` elements initialized.
         unsafe {
-            solana_sha256_hasher::sol_sha256(
+            pinocchio::syscalls::sol_sha256(
                 data.as_ptr() as *const u8,
                 (i + 2) as u64,
                 pda.as_mut_ptr() as *mut u8,
@@ -60,7 +62,7 @@ pub fn pda_derive_address<const N: usize>(
 
         // SAFETY: `pda` has been initialized by the syscall.
         let pubkey = unsafe { pda.assume_init() };
-        Pubkey::new_from_array(pubkey)
+        Pubkey::from(pubkey)
     }
 
     #[cfg(not(target_os = "solana"))]

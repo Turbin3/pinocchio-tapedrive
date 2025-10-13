@@ -112,7 +112,7 @@ pub fn process_tape_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramResu
     let tape = Tape::unpack_mut(&mut tape_info_raw_data)?;
 
     *tape = Tape {
-        number: 0, // (tapes get a number when finalized)
+        number: 0,
         authority: *signer_info.key(),
         name: args.name,
         state: TapeState::Created as u64,
@@ -129,7 +129,9 @@ pub fn process_tape_create(accounts: &[AccountInfo], data: &[u8]) -> ProgramResu
     let writer = Writer::unpack_mut(&mut writer_info_raw_data)?;
 
     writer.tape = *tape_info.key();
-    writer.state = SegmentTree::new(&[tape_info.key().as_ref()]);
+
+    // Use pre-computed zeros to avoid expensive Blake3 hash computations
+    writer.state = SegmentTree::from_zeros(tape_utils::tree::SEGMENT_TREE_ZEROS_18);
 
     Ok(())
 }

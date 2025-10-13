@@ -14,7 +14,6 @@ pub struct Tape {
     pub authority: Pubkey,
 
     pub name: [u8; NAME_LEN],
-    pub merkle_seed: [u8; 32],
     pub merkle_root: [u8; 32],
     pub header: [u8; HEADER_SIZE],
 

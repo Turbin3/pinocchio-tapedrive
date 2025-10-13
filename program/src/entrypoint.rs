@@ -2,14 +2,17 @@
 
 use crate::instruction::*;
 use pinocchio::{
-    account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
+    account_info::AccountInfo, default_allocator, default_panic_handler, program_entrypoint,
     program_error::ProgramError, pubkey::Pubkey, ProgramResult,
 };
 
 // This is the entrypoint for the program.
 program_entrypoint!(process_instruction);
-//Do not allocate memory.
-no_allocator!();
+
+// Use Pinocchio's built-in bump allocator (enables heap allocation for String/Vec)
+// This is needed for Borsh serialization in metadata CPI
+default_allocator!();
+
 // Use the no_std panic handler.
 default_panic_handler!();
 

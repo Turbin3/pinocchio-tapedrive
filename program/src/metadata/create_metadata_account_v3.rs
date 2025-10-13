@@ -5,19 +5,19 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-use crate::api::metadata::collection_details::CollectionDetails;
-use crate::api::metadata::data_v2::DataV2;
+use crate::metadata::collection_details::CollectionDetails;
+use crate::metadata::data_v2::DataV2;
+use crate::state::constant::MPL_TOKEN_METADATA_ID;
+use bytemuck::{Pod, Zeroable};
 use core::mem::MaybeUninit;
 use pinocchio::{
-    program,
-    pubkey::Pubkey,
     account_info::AccountInfo,
-    instruction::{AccountMeta, Instruction, Signer},
     cpi::{slice_invoke, slice_invoke_signed, MAX_CPI_ACCOUNTS},
+    instruction::{AccountMeta, Instruction, Signer},
+    program,
     program_error::ProgramError,
+    pubkey::Pubkey,
 };
-use bytemuck::{Pod, Zeroable};
-use crate::state::constant::MPL_TOKEN_METADATA_ID;
 
 /// Accounts.
 pub struct CreateMetadataAccountV3 {
@@ -60,21 +60,39 @@ impl CreateMetadataAccountV3 {
         if 7 + remaining_accounts.len() > MAX_CPI_ACCOUNTS {
             return Err(ProgramError::InvalidArgument);
         }
-        
+
         const UNINIT_REF: MaybeUninit<AccountMeta> = MaybeUninit::<AccountMeta>::uninit();
         let mut metas = [UNINIT_REF; MAX_CPI_ACCOUNTS];
         let default_pubkey = Pubkey::default();
         unsafe {
-            metas.get_unchecked_mut(0).write(AccountMeta::new(&self.metadata, true, false));
-            metas.get_unchecked_mut(1).write(AccountMeta::readonly(&self.mint));
-            metas.get_unchecked_mut(2).write(AccountMeta::readonly(&self.mint_authority));
-            metas.get_unchecked_mut(3).write(AccountMeta::new(&self.payer, true, true));
-            metas.get_unchecked_mut(4).write(AccountMeta::new(&self.update_authority.0, true, self.update_authority.1));
-            metas.get_unchecked_mut(5).write(AccountMeta::readonly(&self.system_program));
+            metas
+                .get_unchecked_mut(0)
+                .write(AccountMeta::new(&self.metadata, true, false));
+            metas
+                .get_unchecked_mut(1)
+                .write(AccountMeta::readonly(&self.mint));
+            metas
+                .get_unchecked_mut(2)
+                .write(AccountMeta::readonly(&self.mint_authority));
+            metas
+                .get_unchecked_mut(3)
+                .write(AccountMeta::new(&self.payer, true, true));
+            metas.get_unchecked_mut(4).write(AccountMeta::new(
+                &self.update_authority.0,
+                true,
+                self.update_authority.1,
+            ));
+            metas
+                .get_unchecked_mut(5)
+                .write(AccountMeta::readonly(&self.system_program));
             if let Some(rent) = &self.rent {
-                metas.get_unchecked_mut(6).write(AccountMeta::readonly(rent));
-            } else {                
-                metas.get_unchecked_mut(6).write(AccountMeta::readonly(&default_pubkey));
+                metas
+                    .get_unchecked_mut(6)
+                    .write(AccountMeta::readonly(rent));
+            } else {
+                metas
+                    .get_unchecked_mut(6)
+                    .write(AccountMeta::readonly(&default_pubkey));
             }
         }
 
@@ -85,14 +103,14 @@ impl CreateMetadataAccountV3 {
                     .write(remaining_accounts.get_unchecked(i).clone());
             }
         }
-        
-        let account_count = 7 + remaining_accounts.len();        
-       
+
+        let account_count = 7 + remaining_accounts.len();
+
         let mut data = [0u8; 1 + core::mem::size_of::<CreateMetadataAccountV3InstructionArgs>()];
         data[0] = CreateMetadataAccountV3InstructionData::get_discriminator(); // discriminator
-        
+
         let args_bytes = bytemuck::bytes_of(&args);
-        data[1..1 + args_bytes.len()].copy_from_slice(args_bytes);        
+        data[1..1 + args_bytes.len()].copy_from_slice(args_bytes);
 
         Ok(InstructionOwned {
             program_id: MPL_TOKEN_METADATA_ID,
@@ -118,7 +136,7 @@ impl CreateMetadataAccountV3InstructionData {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Pod, Zeroable)]
 #[repr(C)]
-pub struct CreateMetadataAccountV3InstructionArgs {    
+pub struct CreateMetadataAccountV3InstructionArgs {
     pub data: DataV2,
     pub collection_details: CollectionDetails,
     pub is_mutable: u8,
@@ -197,21 +215,17 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
     }
     /// update authority info
     #[inline(always)]
-    pub fn update_authority(
-        &mut self,
-        update_authority: Pubkey,
-        as_signer: bool,
-    ) -> &mut Self {
+    pub fn update_authority(&mut self, update_authority: Pubkey, as_signer: bool) -> &mut Self {
         self.update_authority = Some((update_authority, as_signer));
         self
     }
-//     /// `[optional account, default to '11111111111111111111111111111111']`
-//     /// System program
-//     #[inline(always)]
-//     pub fn system_program(&mut self, system_program: Pubkey) -> &mut Self {
-//         self.system_program = Some(system_program);
-//         self
-//     }
+    //     /// `[optional account, default to '11111111111111111111111111111111']`
+    //     /// System program
+    //     #[inline(always)]
+    //     pub fn system_program(&mut self, system_program: Pubkey) -> &mut Self {
+    //         self.system_program = Some(system_program);
+    //         self
+    //     }
     /// `[optional account]`
     /// Rent info
     #[inline(always)]
@@ -231,26 +245,23 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
     }
     /// `[optional argument]`
     #[inline(always)]
-    pub fn collection_details(&mut self, collection_details: Option<CollectionDetails>) -> &mut Self {
+    pub fn collection_details(
+        &mut self,
+        collection_details: Option<CollectionDetails>,
+    ) -> &mut Self {
         self.collection_details = collection_details;
         self
     }
     /// Add an aditional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: AccountMeta<'b>,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: AccountMeta<'b>) -> &mut Self {
         self.__remaining_accounts[self.__remaining_accounts_len as usize].write(account);
         self.__remaining_accounts_len += 1;
         self
     }
     /// Add additional accounts to the instruction.
     #[inline(always)]
-    pub fn add_remaining_accounts(
-        &mut self,
-        accounts: &[AccountMeta<'b>],
-    ) -> &mut Self {
+    pub fn add_remaining_accounts(&mut self, accounts: &[AccountMeta<'b>]) -> &mut Self {
         for account in accounts {
             let len = self.__remaining_accounts_len as usize;
 
@@ -277,9 +288,19 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
     fn build_args(&self) -> Result<CreateMetadataAccountV3InstructionArgs, ProgramError> {
         Ok(CreateMetadataAccountV3InstructionArgs {
             data: self.data.ok_or(ProgramError::InvalidArgument)?,
-            is_mutable: if self.is_mutable.ok_or(ProgramError::InvalidArgument)? { 1 } else { 0 },
-            collection_details: self.collection_details.unwrap_or(CollectionDetails::default()),
-            collection_details_present: if self.collection_details.is_some() { 1 } else { 0 },
+            is_mutable: if self.is_mutable.ok_or(ProgramError::InvalidArgument)? {
+                1
+            } else {
+                0
+            },
+            collection_details: self
+                .collection_details
+                .unwrap_or(CollectionDetails::default()),
+            collection_details_present: if self.collection_details.is_some() {
+                1
+            } else {
+                0
+            },
             _padding: [0; 6],
         })
     }
@@ -291,11 +312,17 @@ impl<'b> CreateMetadataAccountV3Builder<'b> {
         let instruction = accounts.instruction_with_remaining_accounts(args, &[])?;
 
         let metas_slice: &[AccountMeta] = unsafe {
-            core::slice::from_raw_parts(instruction.accounts.as_ptr() as *const AccountMeta, instruction.account_count as usize)
+            core::slice::from_raw_parts(
+                instruction.accounts.as_ptr() as *const AccountMeta,
+                instruction.account_count as usize,
+            )
         };
 
         let data_slice = unsafe {
-            core::slice::from_raw_parts(instruction.data.as_ptr() as *const u8, instruction.data.len())
+            core::slice::from_raw_parts(
+                instruction.data.as_ptr() as *const u8,
+                instruction.data.len(),
+            )
         };
 
         Ok(Instruction {
@@ -374,19 +401,12 @@ impl<'b> CreateMetadataAccountV3Cpi<'b> {
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b AccountInfo,
-            bool,
-            bool,
-        )],
+        remaining_accounts: &[(&'b AccountInfo, bool, bool)],
     ) -> Result<(), ProgramError> {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[Signer],
-    ) -> Result<(), ProgramError> {
+    pub fn invoke_signed(&self, signers_seeds: &[Signer]) -> Result<(), ProgramError> {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
     // #[allow(clippy::clone_on_copy)]
@@ -394,11 +414,7 @@ impl<'b> CreateMetadataAccountV3Cpi<'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[Signer],
-        remaining_accounts: &[(
-            &'b AccountInfo,
-            bool,
-            bool,
-        )],
+        remaining_accounts: &[(&'b AccountInfo, bool, bool)],
     ) -> Result<(), ProgramError> {
         if 7 + remaining_accounts.len() > MAX_CPI_ACCOUNTS {
             return Err(ProgramError::InvalidArgument);
@@ -409,34 +425,50 @@ impl<'b> CreateMetadataAccountV3Cpi<'b> {
 
         let default_pubkey = Pubkey::default();
         unsafe {
-            metas.get_unchecked_mut(0).write(AccountMeta::new(self.metadata.key(), false, false));
-            metas.get_unchecked_mut(1).write(AccountMeta::readonly(self.mint.key()));
-            metas.get_unchecked_mut(2).write(AccountMeta::readonly(self.mint_authority.key()));
-            metas.get_unchecked_mut(3).write(AccountMeta::new(self.payer.key(), true, true));
-            metas.get_unchecked_mut(4).write(AccountMeta::new(self.update_authority.0.key(), true, self.update_authority.1));
-            metas.get_unchecked_mut(5).write(AccountMeta::readonly(self.system_program.key()));
+            metas
+                .get_unchecked_mut(0)
+                .write(AccountMeta::new(self.metadata.key(), false, false));
+            metas
+                .get_unchecked_mut(1)
+                .write(AccountMeta::readonly(self.mint.key()));
+            metas
+                .get_unchecked_mut(2)
+                .write(AccountMeta::readonly(self.mint_authority.key()));
+            metas
+                .get_unchecked_mut(3)
+                .write(AccountMeta::new(self.payer.key(), true, true));
+            metas.get_unchecked_mut(4).write(AccountMeta::new(
+                self.update_authority.0.key(),
+                true,
+                self.update_authority.1,
+            ));
+            metas
+                .get_unchecked_mut(5)
+                .write(AccountMeta::readonly(self.system_program.key()));
             if self.rent_present == 1 {
-                metas.get_unchecked_mut(6).write(AccountMeta::readonly(self.rent.key()));
-            } else {                
-                metas.get_unchecked_mut(6).write(AccountMeta::readonly(&default_pubkey));
+                metas
+                    .get_unchecked_mut(6)
+                    .write(AccountMeta::readonly(self.rent.key()));
+            } else {
+                metas
+                    .get_unchecked_mut(6)
+                    .write(AccountMeta::readonly(&default_pubkey));
             }
         }
-        
+
         for i in 0..remaining_accounts.len() {
             unsafe {
-                metas
-                    .get_unchecked_mut(i + 7)
-                    .write(AccountMeta {
-                        pubkey: remaining_accounts.get_unchecked(i).0.key(),
-                        is_signer: remaining_accounts.get_unchecked(i).1,
-                        is_writable: remaining_accounts.get_unchecked(i).2,
-                    });
+                metas.get_unchecked_mut(i + 7).write(AccountMeta {
+                    pubkey: remaining_accounts.get_unchecked(i).0.key(),
+                    is_signer: remaining_accounts.get_unchecked(i).1,
+                    is_writable: remaining_accounts.get_unchecked(i).2,
+                });
             }
         }
 
         let mut data = [0u8; 1 + core::mem::size_of::<CreateMetadataAccountV3InstructionArgs>()];
         data[0] = CreateMetadataAccountV3InstructionData::get_discriminator(); // discriminator
-        
+
         let args_bytes = bytemuck::bytes_of(&self.__args);
         data[1..1 + args_bytes.len()].copy_from_slice(args_bytes);
 
@@ -446,9 +478,8 @@ impl<'b> CreateMetadataAccountV3Cpi<'b> {
             core::slice::from_raw_parts(metas.as_ptr() as *const AccountMeta, account_count)
         };
 
-        let data_slice = unsafe {
-            core::slice::from_raw_parts(data.as_ptr() as *const u8, data.len())
-        };
+        let data_slice =
+            unsafe { core::slice::from_raw_parts(data.as_ptr() as *const u8, data.len()) };
 
         let instruction = Instruction {
             program_id: &MPL_TOKEN_METADATA_ID,
@@ -460,37 +491,53 @@ impl<'b> CreateMetadataAccountV3Cpi<'b> {
         let mut account_infos = [UNINIT_INF; MAX_CPI_ACCOUNTS];
 
         unsafe {
-            account_infos.get_unchecked_mut(0).write(self.__program.clone());
-            account_infos.get_unchecked_mut(1).write(self.metadata.clone());
+            account_infos
+                .get_unchecked_mut(0)
+                .write(self.__program.clone());
+            account_infos
+                .get_unchecked_mut(1)
+                .write(self.metadata.clone());
             account_infos.get_unchecked_mut(2).write(self.mint.clone());
-            account_infos.get_unchecked_mut(3).write(self.mint_authority.clone());
+            account_infos
+                .get_unchecked_mut(3)
+                .write(self.mint_authority.clone());
             account_infos.get_unchecked_mut(4).write(self.payer.clone());
-            account_infos.get_unchecked_mut(5).write(self.update_authority.0.clone());
-            account_infos.get_unchecked_mut(6).write(self.system_program.clone());
+            account_infos
+                .get_unchecked_mut(5)
+                .write(self.update_authority.0.clone());
+            account_infos
+                .get_unchecked_mut(6)
+                .write(self.system_program.clone());
             if self.rent_present == 1 {
                 account_infos.get_unchecked_mut(7).write(self.rent.clone());
             } else {
-                account_infos.get_unchecked_mut(7).write(self.system_program.clone());
+                account_infos
+                    .get_unchecked_mut(7)
+                    .write(self.system_program.clone());
             }
         }
 
-        let account_count = 7 + remaining_accounts.len();
+        // Bug fix: account_infos has 8 accounts (program + 7 instruction accounts), not 7
+        let account_info_count = 8 + remaining_accounts.len();
 
         let account_infos_slice: &[AccountInfo] = unsafe {
-            core::slice::from_raw_parts(account_infos.as_ptr() as *const AccountInfo, account_count)
+            core::slice::from_raw_parts(
+                account_infos.as_ptr() as *const AccountInfo,
+                account_info_count,
+            )
         };
 
         let mut account_infos_refs: [MaybeUninit<&AccountInfo>; MAX_CPI_ACCOUNTS] =
-        unsafe { MaybeUninit::uninit().assume_init() };
+            unsafe { MaybeUninit::uninit().assume_init() };
 
-        for i in 0..account_count {
+        for i in 0..account_info_count {
             account_infos_refs[i].write(&account_infos_slice[i]);
         }
 
         let final_slice_for_invoke = unsafe {
             core::slice::from_raw_parts(
                 account_infos_refs.as_ptr() as *const &AccountInfo,
-                account_count,
+                account_info_count,
             )
         };
 
@@ -546,10 +593,7 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
     }
     /// Metadata key (pda of ['metadata', program id, mint id])
     #[inline(always)]
-    pub fn metadata(
-        &mut self,
-        metadata: &'b AccountInfo,
-    ) -> &mut Self {
+    pub fn metadata(&mut self, metadata: &'b AccountInfo) -> &mut Self {
         self.instruction.metadata_present = 1;
         self.instruction.metadata = metadata;
         self
@@ -563,10 +607,7 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
     }
     /// Mint authority
     #[inline(always)]
-    pub fn mint_authority(
-        &mut self,
-        mint_authority: &'b AccountInfo,
-    ) -> &mut Self {
+    pub fn mint_authority(&mut self, mint_authority: &'b AccountInfo) -> &mut Self {
         self.instruction.mint_authority = mint_authority;
         self
     }
@@ -600,10 +641,7 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
     /// `[optional account]`
     /// Rent info
     #[inline(always)]
-    pub fn rent(
-        &mut self,
-        rent: &'b AccountInfo,
-    ) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b AccountInfo) -> &mut Self {
         self.instruction.rent_present = 1;
         self.instruction.rent = rent;
         self
@@ -635,7 +673,7 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
-        self.instruction.__remaining_accounts[self.instruction.__remaining_accounts_len as usize] = 
+        self.instruction.__remaining_accounts[self.instruction.__remaining_accounts_len as usize] =
             MaybeUninit::new((account, is_writable, is_signer));
         self.instruction.__remaining_accounts_len += 1;
         self
@@ -647,14 +685,10 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b AccountInfo,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b AccountInfo, bool, bool)],
     ) -> &mut Self {
         for i in 0..accounts.len() {
-            self.instruction.__remaining_accounts[i] = 
+            self.instruction.__remaining_accounts[i] =
                 MaybeUninit::new((accounts[i].0, accounts[i].1, accounts[i].2));
         }
         self.instruction.__remaining_accounts_len += accounts.len() as u16;
@@ -666,13 +700,16 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
     }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[Signer],
-    ) -> Result<(), ProgramError> {
+    pub fn invoke_signed(&self, signers_seeds: &[Signer]) -> Result<(), ProgramError> {
         assert!(self.instruction.data_present == 1, "data is not set");
-        assert!(self.instruction.is_mutable_present == 1, "is_mutable is not set");
-        assert!(self.instruction.collection_details_present == 1, "collection_details is not set");
+        assert!(
+            self.instruction.is_mutable_present == 1,
+            "is_mutable is not set"
+        );
+        assert!(
+            self.instruction.collection_details_present == 1,
+            "collection_details is not set"
+        );
 
         let args = CreateMetadataAccountV3InstructionArgs {
             data: self.instruction.data.clone(),
@@ -681,11 +718,17 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
             _padding: [0u8; 6],
             collection_details_present: self.instruction.collection_details_present,
         };
-        assert!(self.instruction.metadata_present == 1, "metadata is not set");
+        assert!(
+            self.instruction.metadata_present == 1,
+            "metadata is not set"
+        );
         assert!(self.instruction.mint_present == 1, "mint is not set");
         assert!(self.instruction.payer_present == 1, "payer is not set");
-        assert!(self.instruction.update_authority_present == 1, "update_authority is not set");
-        assert!(self.instruction.rent_present == 1, "rent is not set");        
+        assert!(
+            self.instruction.update_authority_present == 1,
+            "update_authority is not set"
+        );
+        assert!(self.instruction.rent_present == 1, "rent is not set");
 
         let instruction = CreateMetadataAccountV3Cpi {
             __program: self.instruction.__program,
@@ -706,11 +749,8 @@ impl<'b> CreateMetadataAccountV3CpiBuilder<'b> {
                 self.instruction.__remaining_accounts_len as usize,
             )
         };
-        
-        instruction.invoke_signed_with_remaining_accounts(
-            signers_seeds,
-            remaining_accounts_slice,
-        )
+
+        instruction.invoke_signed_with_remaining_accounts(signers_seeds, remaining_accounts_slice)
     }
 }
 
@@ -735,10 +775,6 @@ struct CreateMetadataAccountV3CpiBuilderInstruction<'b> {
     collection_details_present: u8,
     collection_details: CollectionDetails,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: [MaybeUninit<(
-        &'b AccountInfo,
-        bool,
-        bool,
-    )>; MAX_CPI_ACCOUNTS],
+    __remaining_accounts: [MaybeUninit<(&'b AccountInfo, bool, bool)>; MAX_CPI_ACCOUNTS],
     __remaining_accounts_len: u16,
 }

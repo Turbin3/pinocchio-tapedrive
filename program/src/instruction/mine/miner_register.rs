@@ -3,7 +3,7 @@ use pinocchio::{
     instruction::{Seed, Signer},
     program_error::ProgramError,
     pubkey::{self, Pubkey},
-    sysvars::rent::Rent,
+    sysvars::{clock::Clock, rent::Rent, Sysvar},
     ProgramResult,
 };
 
@@ -29,13 +29,14 @@ impl DataLen for RegisterMinerIxData {
 }
 
 pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    let [signer_info, miner_info, rent_info, slot_hashes_info, _system_program_info, _remaining @ ..] =
+    // Account order matches native: signer, miner, system_program, rent, slot_hashes
+    let [signer_info, miner_info, _system_program_info, rent_info, slot_hashes_info, _remaining @ ..] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    if signer_info.is_signer() {
+    if !signer_info.is_signer() {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
@@ -47,18 +48,17 @@ pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult 
 
     let ix_data = unsafe { load_ix_data::<RegisterMinerIxData>(&data)? };
 
-    let seeds = &[b"miner_account", &ix_data.name[..]];
+    let seeds = &[MINER, signer_info.key().as_ref(), &ix_data.name[..]];
     let (miner_pda, miner_bump) = pubkey::find_program_address(seeds, &crate::ID);
 
     if miner_pda.ne(miner_info.key()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
-    let rent = Rent::from_account_info(rent_info)?;
-
     let bump_binding = [miner_bump];
     let signer_seeds = [
-        Seed::from(b"miner_account"),
+        Seed::from(MINER),
+        Seed::from(signer_info.key().as_ref()),
         Seed::from(&ix_data.name[..]),
         Seed::from(&bump_binding),
     ];
@@ -75,12 +75,19 @@ pub fn process_register(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult 
 
     let next_challenge = compute_next_challenge(&miner_info.key(), &slot_hashes_info)?;
 
+    // Initialize miner using API method
     Miner::initialize(
         miner_info,
         ix_data.name,
         (*signer_info.key()).into(),
         next_challenge,
     )?;
+
+    // Update last_proof_at to current time to match native implementation
+    let current_time = Clock::get()?.unix_timestamp;
+    let mut miner_data = miner_info.try_borrow_mut_data()?;
+    let miner = Miner::unpack_mut(&mut miner_data)?;
+    miner.last_proof_at = current_time;
 
     Ok(())
 }
